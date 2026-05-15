@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "screenshot": {
+      "command": "npx",
+      "args": ["-y", "mcp-screenshot-service"]
+    }
+  }
+}
