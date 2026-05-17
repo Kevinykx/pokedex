@@ -743,8 +743,8 @@ body{padding-bottom:56px}
 'use strict';
 
 const POKEAPI='https://pokeapi.co/api/v2';
-const OFFICIAL_CDN='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
-const PIXEL_CDN='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+const OFFICIAL_CDN='https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork';
+const PIXEL_CDN='https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon';
 const BATCH=20;
 const PAGE_SIZE=10;
 
@@ -1088,7 +1088,7 @@ async function loadDetailsBatches(){
       p.moves=data.moves||[];
       p.height=data.height;
       p.weight=data.weight;
-      p.cry=data.cries?.latest||'';
+      p.cry=(data.cries?.latest||'').replace('raw.githubusercontent.com/PokeAPI/cries/main','cdn.jsdelivr.net/gh/PokeAPI/cries@main');
       if(species){
         p.nameCN=species.names?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.name||p.name;
         p.flavorText=species.flavor_text_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.flavor_text?.replace(/[\n\f]/g,' ')||'';
@@ -1254,7 +1254,7 @@ async function openDrawer(id){
       p.types=data.types||[];p.stats=data.stats||[];
       p.abilities=data.abilities||[];p.moves=data.moves||[];
       p.height=data.height;p.weight=data.weight;
-      p.cry=data.cries?.latest||'';
+      p.cry=(data.cries?.latest||'').replace('raw.githubusercontent.com/PokeAPI/cries/main','cdn.jsdelivr.net/gh/PokeAPI/cries@main');
       if(species){
         p.nameCN=species.names?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.name||p.name;
         p.flavorText=species.flavor_text_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.flavor_text?.replace(/[\n\f]/g,' ')||'';
@@ -1635,7 +1635,7 @@ function renderDrawer(p){
         p.types=fd.types||[];p.stats=fd.stats||[];
         p.abilities=fd.abilities||[];p.moves=fd.moves||[];
         p.height=fd.height;p.weight=fd.weight;
-        p.cry=fd.cries?.latest||'';
+        p.cry=(fd.cries?.latest||'').replace('raw.githubusercontent.com/PokeAPI/cries/main','cdn.jsdelivr.net/gh/PokeAPI/cries@main');
         if(fs){
           p.nameCN=fs.names?.find(function(n){return n.language.name==='zh-hans'||n.language.name==='zh-Hant';})?.name||f.name;
           p.flavorText=fs.flavor_text_entries?.find(function(n){return n.language.name==='zh-hans'||n.language.name==='zh-Hant';})?.flavor_text?.replace(/[\n\f]/g,' ')||'';
