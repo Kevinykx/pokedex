@@ -623,13 +623,29 @@ body{padding-bottom:56px}
   .team-add-title{font-size:14px}
   .team-add-confirm{font-size:11px;padding:5px 18px}
 }
-/* No hover on touch devices */
+/* No hover on touch devices — reset all hover effects */
 @media(hover:none){
+  .hamburger:hover{background:rgba(255,255,255,.85)}
+  .sidebar-close:hover{background:var(--border-light)}
+  .sidebar-item:hover,.sidebar-section-hdr:hover{background:transparent}
+  .ctrl-btn:hover{background:transparent}
+  .ctrl-btn.active{background:rgba(0,0,0,.08)}
+  .type-filter-btn:hover{background:rgba(255,255,255,.15);color:rgba(255,255,255,.6)}
   .card:hover::before{opacity:0}
   .card:hover .card-img{transform:translate(-50%,-50%)}
-  .guess-opt button:hover:not(:disabled){background:var(--surface);transform:none}
+  .team-rating-btn:hover,.team-analysis-close-btn:hover,.guess-next-btn:hover{background:#cc0000}
   .team-pick-btn:hover{border-color:var(--border);background:var(--surface)}
   .team-add-pokemon-item:hover{border-color:var(--border);background:var(--surface)}
+  .dr-close:hover{background:rgba(240,235,223,.9);color:var(--text-muted)}
+  .dr-sound-btn:hover,.dr-team-btn:hover{background:var(--surface);color:var(--text-muted);border-color:var(--border);transform:none}
+  .team-replace-item:hover{background:var(--surface-hover);transform:none}
+  .dr-evo:hover{background:var(--chip)}
+  .scroll-top:hover{background:var(--surface);color:#cc0000;border-color:rgba(204,0,0,.3);box-shadow:0 2px 12px rgba(204,0,0,.15)}
+  .guess-opt button:hover:not(:disabled){background:var(--surface);transform:none}
+  .guess-exit-btn.stay:hover{background:var(--border-light)}
+  .guess-exit-btn.leave:hover{background:#cc0000}
+  .guess-back-btn:hover{background:var(--surface);border-color:var(--border);color:var(--text-secondary)}
+  .guess-mode-card:hover{border-color:var(--border);background:var(--surface);transform:none}
 }
 </style>
 </head>
