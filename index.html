@@ -1,13 +1,2359 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>宝可梦图鉴</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='white' stroke='%23333' stroke-width='5'/><path d='M6 50 A44 44 0 0 1 94 50' fill='%23e60012'/><line x1='6' y1='50' x2='94' y2='50' stroke='%23333' stroke-width='5'/><circle cx='50' cy='50' r='14' fill='white' stroke='%23333' stroke-width='4'/><circle cx='50' cy='50' r='6' fill='%23333'/></svg>" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js?v=2"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Pokédex - Kanto Region</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-body:#f7f3e8;--surface:#fff;--surface-hover:#f7f3e8;
+  --text-primary:#2d2d2d;--text-secondary:#555;--text-muted:#999;--text-light:#bbb;
+  --border:#e8e0d0;--border-light:#f0ebdf;
+  --skel:#ece4d4;--stat-bg:var(--border-light);--chip:var(--border-light);--img-bg:#f7f3e8;
+  --overlay:rgba(0,0,0,.45);--nav-bg:#fff;--icon-muted:#888;--page-bg:#fff;
+  --badge-bg:var(--border-light);--badge-text:#555;--nature-bg:#fff5e6;--nature-text:#cc7000;
+  --guess-bg:#f7f3e8;
+}
+[data-theme="dark"]{
+  --bg-body:#12121a;--surface:#1a1a2e;--surface-hover:#22223a;
+  --text-primary:#e0e0e0;--text-secondary:#aaa;--text-muted:#777;--text-light:#555;
+  --border:#2a2a3e;--border-light:#2a2a3e;
+  --skel:#22223a;--stat-bg:#2a2a3e;--chip:#2a2a3e;--img-bg:#161625;
+  --overlay:rgba(0,0,0,.7);--nav-bg:#1a1a2e;--icon-muted:#666;--page-bg:#1e1e32;
+  --badge-bg:#2a2a3e;--badge-text:#aaa;--nature-bg:#2a2a3e;--nature-text:#e0a030;
+  --guess-bg:#1a1a2e;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+  background:var(--bg-body);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased
+}
+/* ── HEADER ── */
+.header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:linear-gradient(135deg,#cc0000,#990000);
+  padding:10px 16px 8px;box-shadow:0 2px 12px rgba(0,0,0,.25)
+}
+.header-row1{
+  display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:2px;
+  position:relative
+}
+.hamburger{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;border:2px solid rgba(0,0,0,.08);
+  background:rgba(255,255,255,.85);color:#2d2d2d;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2
+}
+.hamburger:hover{background:#fff}
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;z-index:250;
+  width:270px;max-width:75vw;
+  background:var(--surface);overflow-y:auto;
+  transform:translateX(-100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 24px rgba(0,0,0,.15)
+}
+.sidebar.open{transform:translateX(0)}
+.sidebar-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 16px 12px;border-bottom:2px solid var(--border-light)
+}
+.sidebar-hdr .stitle{
+  font-family:'Press Start 2P',monospace;font-size:10px;color:var(--text-primary)
+}
+.sidebar-close{
+  width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--border-light);color:var(--icon-muted);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background .2s
+}
+.sidebar-close:hover{background:var(--border)}
+.sidebar-body{padding:8px 0}
+.sidebar-item{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 20px;cursor:pointer;
+  font-size:14px;font-weight:600;color:var(--text-primary);
+  transition:all .15s;border-left:3px solid transparent;
+  -webkit-tap-highlight-color:transparent
+}
+.sidebar-item:hover{background:var(--surface-hover)}
+.sidebar-item.active{background:var(--surface-hover);border-left-color:#cc0000;color:#cc0000}
+.sidebar-gen-wrapper{border-bottom:2px solid var(--border-light)}
+.sidebar-section-hdr{display:flex;align-items:center;gap:8px;padding:14px 20px;font-size:14px;font-weight:600;color:var(--text-primary);cursor:pointer;transition:all .15s;border-left:3px solid transparent;-webkit-tap-highlight-color:transparent}
+.sidebar-section-hdr:hover{background:var(--surface-hover)}
+.sg-arrow{font-size:12px;color:var(--text-muted);transition:transform .2s}
+.sg-arrow.open{transform:rotate(90deg)}
+.sidebar-item.sub{padding-left:36px;font-size:13px}
+.sidebar-item .tag{
+  margin-left:auto;font-size:9px;color:var(--text-light);font-weight:400;
+  background:var(--border-light);padding:2px 8px;border-radius:10px
+}
+.header-row1 .dot{
+  width:8px;height:8px;border-radius:50%;background:#5ab0ff;
+  border:2px solid rgba(255,255,255,.3);flex-shrink:0
+}
+.header-row1 .dot:last-child{background:#43cc47}
+.title{
+  font-family:'Press Start 2P',monospace;font-size:14px;color:#fff;
+  letter-spacing:1px;text-shadow:2px 2px 0 rgba(0,0,0,.3)
+}
+.header-controls{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  display:flex;gap:0;background:rgba(255,255,255,.9);border-radius:14px;padding:2px
+}
+.ctrl-btn{
+  width:28px;height:24px;border:none;background:transparent;
+  color:#2d2d2d;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+  border-radius:0
+}
+.ctrl-btn:hover{background:rgba(0,0,0,.06)}
+.ctrl-btn:active{background:rgba(0,0,0,.12)}
+.ctrl-btn.active{background:rgba(0,0,0,.08)}
+.ctrl-btn:first-child{border-radius:12px 0 0 12px}
+.ctrl-btn:last-child{border-radius:0 12px 12px 0}
+.ctrl-btn.random-btn{color:#2d2d2d}
+.ctrl-btn.random-btn:hover{background:rgba(0,0,0,.06)}
+.subtitle{
+  text-align:center;font-size:9px;color:rgba(255,255,255,.7);
+  margin-bottom:6px;letter-spacing:1px
+}
+.search-wrap{position:relative;max-width:480px;margin:0 auto 6px}
+.search-icon{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  color:rgba(255,255,255,.5);font-size:12px;pointer-events:none
+}
+.search-wrap input{
+  width:100%;padding:8px 12px 8px 32px;border:2px solid rgba(255,255,255,.2);
+  border-radius:8px;background:rgba(255,255,255,.15);color:#fff;
+  font-size:13px;outline:none;transition:all .25s
+}
+.search-wrap input::placeholder{color:rgba(255,255,255,.55)}
+.search-wrap input:focus{border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.22)}
+/* ── TYPE FILTER BAR ── */
+.type-filter-bar{
+  display:flex;gap:4px;overflow-x:auto;padding:2px 0 4px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap
+}
+.type-filter-bar::-webkit-scrollbar{display:none}
+.type-filter-btn{
+  flex:0 0 auto;padding:2px 10px;border-radius:10px;border:2px solid transparent;
+  font-size:9px;font-weight:700;cursor:pointer;text-transform:uppercase;
+  letter-spacing:.4px;transition:all .2s;
+  background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);
+  white-space:nowrap
+}
+.type-filter-btn:hover{background:rgba(255,255,255,.25);color:#fff}
+.type-filter-btn.active{
+  border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,.3);color:#fff
+}
+.type-filter-btn.all-btn.active{background:rgba(255,255,255,.3);border-color:#fff}
+.type-filter-btn[data-type]:not(.all-btn).active{background:var(--tc,rgba(255,255,255,.25));color:#fff}
+/* ── MAIN ── */
+.main{padding:100px 12px 24px;max-width:1240px;margin:0 auto}
+/* ── SKELETON ── */
+.skeleton-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px
+}
+@media(min-width:520px){.skeleton-grid{grid-template-columns:repeat(3,1fr);gap:12px}}
+@media(min-width:820px){.skeleton-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1120px){.skeleton-grid{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:1400px){.skeleton-grid{grid-template-columns:repeat(6,1fr)}}
+.skeleton-grid.hidden{display:none}
+.skel-card{
+  background:var(--skel);border-radius:10px;overflow:hidden;position:relative;
+  padding:10px 8px;min-height:140px
+}
+.skel-card::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+  animation:shimmer 1.4s ease-in-out infinite
+}
+@keyframes shimmer{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(100%)}
+}
+.skel-id{height:12px;width:40px;background:rgba(0,0,0,.06);border-radius:4px;margin:0 auto 8px}
+.skel-img{width:56px;height:56px;background:rgba(0,0,0,.06);border-radius:50%;margin:0 auto 8px}
+.skel-name{height:10px;width:60%;background:rgba(0,0,0,.06);border-radius:4px;margin:0 auto 8px}
+.skel-types{display:flex;gap:4px;justify-content:center}
+.skel-type{height:10px;width:32px;background:rgba(0,0,0,.06);border-radius:3px}
+.grid.hidden{display:none}
+/* ── GRID ── */
+.grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px
+}
+@media(min-width:520px){.grid{grid-template-columns:repeat(3,1fr);gap:12px}}
+@media(min-width:820px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1120px){.grid{grid-template-columns:repeat(5,1fr)}}
+/* list view */
+.grid.list-view{
+  grid-template-columns:1fr!important;gap:6px;max-width:640px;margin:0 auto
+}
+.grid.list-view .card{
+  flex-direction:row;align-items:center;padding:8px 14px;text-align:left
+}
+.grid.list-view .card::before{display:none}
+.grid.list-view .card-id{
+  position:static;width:36px;flex-shrink:0;text-align:left;margin:0
+}
+.grid.list-view .card-img-wrap{width:44px;height:44px;flex-shrink:0;margin:0}
+.grid.list-view .card-img-wrap::after{display:none}
+.grid.list-view .card-img{
+  width:44px;height:44px;position:static;transform:none;object-fit:contain;padding:2px
+}
+.grid.list-view .card-name-row{flex:1;justify-content:flex-start;margin:0}
+.grid.list-view .card-name-row .card-badges{flex-shrink:0}
+/* ── CARD ── */
+.card{
+  background:var(--surface);border-radius:10px;padding:10px 8px 10px;
+  text-align:center;cursor:pointer;
+  border:1px solid var(--border);
+  transition:transform .2s,box-shadow .2s,border-color .3s;
+  position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.06),0 0 0 1px transparent
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#cc0000,#ff4444,#cc0000);
+  opacity:0;transition:opacity .25s
+}
+.card:hover::before{opacity:1}
+.card:active{transform:scale(.96)}
+/* type glow */
+.card[data-glow]{
+  border-color:transparent;
+  box-shadow:0 2px 12px rgba(0,0,0,.08),0 0 0 1px var(--glow-color,transparent),0 0 16px var(--glow-glow,transparent)
+}
+.card-id{
+  font-family:'Press Start 2P',monospace;font-size:9px;color:var(--text-muted);
+  margin-bottom:2px;letter-spacing:0
+}
+.card-img-wrap{
+  background:var(--img-bg);border-radius:8px;margin:4px 4px 6px;
+  position:relative;overflow:hidden;max-width:96px;margin-left:auto;margin-right:auto
+}
+.card-img-wrap::after{content:'';display:block;padding-bottom:100%}
+.no-sprite{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-light)}
+.dr-shiny-btn{position:absolute;top:6px;left:6px;z-index:3;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:#d4a017;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;padding:0;line-height:1;outline:none}
+.dr-shiny-btn.active{background:#ffd700;color:#fff;border-color:#ffd700;box-shadow:0 0 10px rgba(255,215,0,.5);transform:scale(1.1)}
+.dr-fav-btn{position:absolute;top:6px;right:6px;z-index:3;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;padding:0;line-height:1;outline:none}
+.dr-fav-btn.active{background:#cc0000;color:#fff;border-color:#cc0000;box-shadow:0 0 10px rgba(204,0,0,.4);transform:scale(1.1)}
+.card-fav-indicator{position:absolute;top:4px;right:4px;z-index:2;width:18px;height:18px;pointer-events:none;opacity:.9}
+.dr-form-indicator{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text-muted);background:rgba(255,255,255,.85);padding:2px 8px;border-radius:8px;white-space:nowrap;pointer-events:none;z-index:2}
+.card-img{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:100%;height:100%;object-fit:contain;image-rendering:pixelated;
+  transition:transform .3s;display:block;padding:4px;
+  animation:cardImgFade .35s ease-out
+}
+@keyframes cardImgFade{0%{opacity:0}100%{opacity:1}}
+.card:hover .card-img{transform:translate(-50%,-50%) scale(1.1)}
+.card-name-row{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  flex-wrap:wrap;margin-bottom:4px
+}
+.card-name{
+  font-size:13px;font-weight:700;text-transform:capitalize;
+  color:var(--text-primary);letter-spacing:.3px
+}
+.card-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+/* ── TYPE BADGES ── */
+.type-badge{
+  display:inline-block;padding:2px 7px;border-radius:4px;
+  font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;
+  letter-spacing:.4px;line-height:1.4
+}
+.type-normal{background:#A8A878}
+.type-fire{background:#F08030}
+.type-water{background:#6890F0}
+.type-electric{background:#F8D030;color:var(--text-primary)!important}
+.type-grass{background:#78C850}
+.type-ice{background:#98D8D8;color:var(--text-primary)!important}
+.type-fighting{background:#C03028}
+.type-poison{background:#A040A0}
+.type-ground{background:#E0C068;color:var(--text-primary)!important}
+.type-flying{background:#A890F0}
+.type-psychic{background:#F85888}
+.type-bug{background:#A8B820}
+.type-rock{background:#B8A038}
+.type-ghost{background:#705898}
+.type-dragon{background:#7038F8}
+.type-dark{background:#705848}
+.type-steel{background:#B8B8D0;color:var(--text-primary)!important}
+.type-fairy{background:#EE99AC}
+
+
+/* ── DRAWER SCAN ANIMATION ── */
+@keyframes pop{0%{transform:scale(.3) rotate(-8deg);opacity:0}20%{transform:scale(1.35) rotate(3deg);opacity:1}40%{transform:scale(1.35) rotate(3deg)}55%{transform:scale(.9) rotate(-2deg)}70%{transform:scale(1.05) rotate(1deg)}85%{transform:scale(.97) rotate(0)}100%{transform:scale(1) rotate(0)}}@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+.dr-img-float{display:inline-block;position:relative;width:140px;height:140px}.dr-img-float.pop{animation:pop .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes popIn{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}
+@keyframes fadeOut{0%{opacity:1}100%{opacity:0}}
+@keyframes scanLine{
+  0%{top:-8%}
+  100%{top:108%}
+}
+.dr-img-wrap .dr-img{
+  animation:fadeIn .5s ease-out
+}
+.dr-img-wrap.scanning::after{
+  content:'';position:absolute;left:8%;right:8%;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  border-radius:2px;animation:scanLine .4s ease-in-out;z-index:2
+}
+
+/* ── PULL TO REFRESH ── */
+.pull-indicator{text-align:center;padding:0;color:#cc0000;font-size:12px;font-weight:700;height:0;overflow:hidden;opacity:0;transition:height .15s,opacity .15s;line-height:36px}
+.pull-indicator.pull{height:36px;opacity:1}
+.pull-indicator.loading{height:36px;opacity:1}
+@keyframes pullSpin{to{transform:rotate(360deg)}}
+.pull-indicator .spin{display:inline-block;width:14px;height:14px;border:2px solid #cc0000;border-top-color:transparent;border-radius:50%;animation:pullSpin .6s linear infinite;vertical-align:middle;margin-right:4px}
+
+/* ── RANDOM FLASH ── */
+@keyframes randomFlash{
+  0%,100%{box-shadow:0 2px 8px rgba(0,0,0,.06),0 0 0 0 rgba(255,215,0,0);border-color:#e8e0d0}
+  10%{box-shadow:0 2px 8px rgba(0,0,0,.06),0 0 24px 8px rgba(255,215,0,.6);border-color:#ffd700}
+  50%{box-shadow:0 2px 8px rgba(0,0,0,.06),0 0 14px 4px rgba(255,215,0,.4);border-color:#ffd700}
+  90%{box-shadow:0 2px 8px rgba(0,0,0,.06),0 0 24px 8px rgba(255,215,0,.6);border-color:#ffd700}
+}
+.card.random-flash{
+  animation:randomFlash .8s ease 3;border-color:#ffd700;z-index:10;position:relative
+}
+
+
+.team-panel{display:none;padding:8px 0}
+.team-panel.show{display:block}
+.team-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.team-tab{padding:4px 14px;border-radius:999px;border:2px solid var(--border);background:var(--surface);font-size:11px;font-weight:700;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s}
+.team-tab.active{background:#cc0000;color:#fff;border-color:#cc0000}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:500px;margin:0 auto}
+.team-slot{background:var(--surface);border:2px dashed var(--border);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.team-slot.filled{border-style:solid;border-color:var(--border);cursor:pointer}
+.team-slot .slot-img{width:64px;height:64px;image-rendering:pixelated}
+.team-slot .slot-name{font-size:11px;font-weight:700;color:var(--text-primary);text-transform:capitalize}
+.team-slot .slot-empty{font-size:28px;color:var(--text-light)}
+.team-rating{background:var(--bg-body);border-radius:16px;padding:12px 0;margin:0 auto;max-width:500px;position:sticky;bottom:0;z-index:5}
+.team-rating-title{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;text-align:center}
+.team-rating-head{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.team-rating-grade{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0}
+.team-rating-grade.S{background:#cc0000;color:#fff}
+.team-rating-grade.A{background:#e05030;color:#fff}
+.team-rating-grade.B{background:#e08040;color:#fff}
+.team-rating-grade.C{background:#d0b040;color:#fff}
+.team-rating-grade.D{background:#a0a0a0;color:#fff}
+.team-rating-summary{font-size:13px;color:var(--text-secondary);line-height:1.5;flex:1}
+.team-rating-summary strong{color:var(--text-primary)}
+.team-rating-section-title{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.team-rating-blindspots{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.team-rating-blindspot-badge{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;color:#fff}
+.team-rating-detail{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.team-rating-detail-item{text-align:center;padding:4px 2px;border-radius:4px;font-size:10px;font-weight:600}
+.team-rating-detail-item .trdi-icon{font-size:14px;display:block;margin-bottom:1px}
+.team-rating-detail-item.trdi-weak{background:rgba(200,0,0,.12);color:#cc0000}
+.team-rating-detail-item.trdi-neutral{background:var(--border-light);color:var(--text-muted)}
+.team-rating-detail-item.trdi-resist{background:rgba(0,180,80,.12);color:#00a050}
+.team-rating-detail-item.trdi-immune{background:rgba(60,60,60,.12);color:var(--text-secondary)}
+.team-rating-btn{display:block;width:fit-content;margin:0 auto;padding:7px 22px;border:none;border-radius:999px;background:#cc0000;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.team-rating-btn:hover{background:#990000}
+.team-analysis-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;animation:fadeIn .25s ease-out;padding:20px}
+.team-analysis-modal{background:var(--surface);border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25);animation:popIn .25s ease-out}
+.team-analysis-close-btn{display:block;width:fit-content;margin:0 auto 14px;padding:6px 18px;border:none;border-radius:999px;background:#cc0000;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.team-analysis-close-btn:hover{background:#990000}
+.team-add-modal{padding:10px 0}
+.team-add-title{font-size:15px;font-weight:800;color:var(--text-primary);text-align:center;margin-bottom:6px}
+.team-add-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:0 auto 12px;max-width:280px}
+.team-add-type-btn{padding:5px 0;border:1px solid transparent;border-radius:6px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit}
+.team-add-type-btn.selected{border-color:#fff;box-shadow:0 0 0 2px #cc0000;transform:scale(1.08)}
+.team-pick-btn{display:block;width:100%;padding:10px;border:2px solid var(--border);border-radius:12px;background:var(--surface);cursor:pointer;font-family:inherit;text-align:center;margin-bottom:8px;transition:all .15s}
+.team-pick-btn:hover{border-color:#cc0000;background:var(--surface-hover)}
+.team-add-confirm{display:block;width:fit-content;margin:0 auto;padding:6px 22px;border:none;border-radius:999px;background:#cc0000;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.team-add-confirm:disabled{opacity:.4;cursor:default}
+.team-add-pokemon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:50vh;overflow-y:auto;padding:4px 0}
+.team-add-pokemon-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:2px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;transition:all .15s;font-family:inherit}
+.team-add-pokemon-item:hover{border-color:#cc0000;background:var(--surface-hover)}
+.team-add-pokemon-item .slot-img{width:56px;height:56px;image-rendering:pixelated}
+.team-add-pokemon-name{font-size:10px;font-weight:600;color:var(--text-primary);text-align:center;line-height:1.2}
+.team-slot .slot-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:#cc0000;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:2}
+/* ── NO RESULTS ── */
+.no-results{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;text-align:center;grid-column:1/-1
+}
+.no-results.show{display:flex}
+.no-results-icon{font-size:56px;margin-bottom:8px;opacity:.5}
+.no-results-text{font-size:15px;color:var(--text-muted);font-weight:600}
+.no-results-hint{font-size:12px;color:var(--text-light);margin-top:4px}
+
+/* ── OVERLAY ── */
+.overlay{
+  position:fixed;inset:0;z-index:200;
+  background:var(--overlay);opacity:0;pointer-events:none;transition:opacity .3s
+}
+.overlay.active{opacity:1;pointer-events:auto}
+
+/* ── DRAWER ── */
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;z-index:300;
+  width:92%;max-width:400px;background:var(--surface);overflow-y:auto;
+  transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:-4px 0 24px rgba(0,0,0,.15)
+}
+.drawer.open{transform:translateX(0)}
+.drawer-content{position:relative;padding:0 20px 28px}
+.dr-close{
+  position:sticky;top:10px;float:right;z-index:10;
+  width:26px;height:26px;border-radius:50%;border:none;
+  background:rgba(240,235,223,.9);color:var(--text-muted);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;margin-bottom:2px
+}
+.dr-close:hover{background:var(--border);color:var(--icon-muted)}
+.dr-sound-btn{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2;padding:0;line-height:1;outline:none}
+.dr-sound-btn:hover{background:var(--surface);color:#cc0000;border-color:#cc0000;transform:scale(1.1)}
+.dr-team-btn{position:absolute;bottom:6px;left:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:#cc0000;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;z-index:2;padding:0;line-height:1;outline:none}
+.dr-team-btn:hover{background:var(--surface);color:#cc0000;border-color:#cc0000;transform:scale(1.1)}
+.dr-team-btn.in-team{background:rgba(80,200,120,.2);color:#50c878;border-color:rgba(80,200,120,.3)}
+.dr-team-btn.full{background:rgba(200,200,200,.3);color:var(--text-muted);border-color:rgba(200,200,200,.2);cursor:pointer}
+.team-replace-overlay{position:absolute;inset:-28px -20px;z-index:50;display:flex;align-items:center;justify-content:center}
+.team-replace-modal{background:var(--surface);border-radius:16px;padding:20px;max-width:280px;width:85%;box-shadow:0 8px 32px rgba(0,0,0,.25);animation:popIn .25s ease-out}
+.team-replace-title{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px;text-align:center}
+.team-replace-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.team-replace-item{background:var(--surface-hover);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .15s}
+.team-replace-item:hover{background:#e8e0d0;transform:scale(1.05)}
+.team-replace-item img{width:48px;height:48px;image-rendering:pixelated;display:block;margin:0 auto}
+.team-replace-item span{display:block;font-size:10px;color:var(--text-secondary);font-weight:600;margin-top:2px}
+.dr-img-wrap{
+  text-align:center;clear:both;
+  background:var(--img-bg);border-radius:16px;padding:16px;position:relative;overflow:hidden;
+  margin:0 auto 10px;max-width:200px;touch-action:pan-y
+}
+.dr-img{width:140px;height:140px;display:block;margin:0 auto}
+.dr-id{
+  font-family:'Press Start 2P',monospace;font-size:11px;color:var(--text-muted);
+  text-align:center
+}
+.dr-name{font-size:20px;font-weight:800;text-transform:capitalize;color:var(--text-primary)}
+.dr-types{display:flex;gap:5px;justify-content:center;margin:8px 0 14px}
+.dr-types .type-badge{font-size:10px;padding:3px 10px}
+.dr-section{margin-bottom:14px}
+.dr-section-title{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border-light)
+}
+.dr-desc{font-size:13px;line-height:1.6;color:var(--text-secondary)}
+.dr-abilities{display:flex;gap:8px;flex-wrap:wrap}
+.dr-tip{
+  position:fixed;z-index:310;background:var(--surface);border-radius:10px;
+  padding:12px 14px;box-shadow:0 4px 20px rgba(0,0,0,.18);
+  max-width:280px;font-size:13px;line-height:1.5;
+  border:1px solid var(--border);display:none;pointer-events:none
+}
+.dr-tip.show{display:block}
+.dr-tip-tt{font-weight:700;margin-bottom:4px;font-size:14px}
+.dr-tip-sub{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+.dr-tip-desc{color:var(--text-secondary);font-size:12px}
+.dr-ability{background:var(--border-light);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--text-secondary);font-weight:600;border:1.5px solid var(--ac,transparent)}
+.dr-nature{background:var(--surface)5e6;border-radius:20px;padding:4px 14px;font-size:12px;color:#cc7000;font-weight:600;display:inline-block}
+.dr-move{background:var(--chip);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--icon-muted);font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.dr-evo{display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--chip);border-radius:6px;padding:3px 10px}
+.dr-evo:hover{background:#e8e0d0}
+.dr-evo-img{width:24px;height:24px;image-rendering:pixelated}
+.dr-evo-arr{color:#ccc;font-size:16px}
+.dr-move-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dr-move-cat{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;line-height:1.2}
+.dr-move-cat.physical{color:#c03028;background:rgba(192,48,40,.1)}
+.dr-move-cat.special{color:#6890f0;background:rgba(104,144,240,.1)}
+.dr-move-cat.status{color:var(--icon-muted);background:rgba(136,136,136,.1)}
+.dr-moves-scroll{
+  display:grid;grid-template-rows:repeat(3,auto);grid-auto-flow:column;
+  gap:4px;overflow-x:auto;padding:2px 0 6px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none
+}
+.dr-moves-scroll::-webkit-scrollbar{display:none}
+.dr-stats{padding-top:4px}
+.dr-pages-slider{margin-top:6px;overflow-y:visible}
+.dr-page{display:block}
+.dr-page.hidden{display:none}
+.dr-pages-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
+.dr-pages-dot{width:6px;height:6px;border-radius:50%;background:#ddd;cursor:pointer;transition:all .2s}
+.dr-pages-dot.active{background:#cc0000;width:16px;border-radius:3px}
+.dr-stats{padding-top:4px}
+#dr-radar{display:block;margin:0 auto}
+.dr-pages-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
+.dr-stats-dot{width:6px;height:6px;border-radius:50%;background:#ddd;cursor:pointer;transition:all .2s}
+.dr-stats-dot.active{background:#cc0000;width:16px;border-radius:3px}
+.dr-eff-grid{min-height:20px}
+.dr-eff-row{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin-bottom:4px}
+.dr-eff-label{font-size:10px;font-weight:700;color:var(--icon-muted);width:24px;flex-shrink:0}
+.dr-eff-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;line-height:1.5}
+@keyframes drStatsFade{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+.dr-stats-fade{animation:drStatsFade .3s ease-out}
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.stat-label{font-size:10px;font-weight:700;color:var(--icon-muted);width:44px;text-align:right;flex-shrink:0}
+.stat-bar-bg{flex:1;height:8px;background:var(--border-light);border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:4px;transition:width .6s ease-out}
+.stat-bar-fill.hp{background:#FF5959}
+.stat-bar-fill.attack{background:#F5AC78}
+.stat-bar-fill.defense{background:#FAE078}
+.stat-bar-fill.spatk{background:#9DB7F5}
+.stat-bar-fill.spdef{background:#A7DB8D}
+.stat-bar-fill.speed{background:#FA92B2}
+.stat-val{font-size:11px;font-weight:700;color:var(--text-primary);width:28px;text-align:right;flex-shrink:0}
+.drawer-loading{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:100px 20px;gap:16px
+}
+.drawer-loading .pokeball{width:36px;height:36px;border-width:3px}
+.drawer-loading .pokeball-center{width:10px;height:10px;border-width:2px}
+.drawer-loading-text{font-size:13px;color:var(--text-muted)}
+.hidden{display:none!important}
+.hidden{display:none!important}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:99;background:var(--nav-bg);border-top:1px solid var(--border);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0;cursor:pointer;transition:all .15s;border:none;background:none;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.bottom-nav-item:active{transform:scale(.92)}
+.bottom-nav-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.bottom-nav-label{font-size:10px;color:var(--icon-muted);font-weight:600;letter-spacing:.3px}
+.bottom-nav-item.active .bottom-nav-label{color:#cc0000}
+.bottom-nav-item.active .bottom-nav-icon svg{color:#cc0000}
+body{padding-bottom:56px}
+.scroll-top{position:fixed;right:16px;bottom:72px;z-index:90;width:38px;height:38px;border-radius:50%;border:2px solid rgba(204,0,0,.3);background:var(--surface);color:#cc0000;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(204,0,0,.15);display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(20px);pointer-events:none;transition:all .25s;line-height:1;padding:0;font-weight:700}
+.scroll-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.scroll-top:hover{background:#cc0000;color:#fff;border-color:#cc0000;box-shadow:0 2px 16px rgba(204,0,0,.35)}
+
+/* Guess game */
+.guess-wrap{padding:10px 0;max-width:440px;margin:0 auto}
+.guess-score{text-align:center;font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:10px}
+.guess-streak{text-align:center;font-size:12px;color:#cc0000;font-weight:600;margin-bottom:6px;min-height:18px}
+.guess-sil-wrap{text-align:center;padding:24px;background:var(--guess-bg);border-radius:16px;margin:0 auto 14px;max-width:200px;position:relative;overflow:hidden}
+.guess-sil{width:140px;height:140px;image-rendering:pixelated;filter:brightness(0);display:block;margin:0 auto;transition:filter .5s ease}
+.guess-sil.reveal{filter:none;animation:pop .6s cubic-bezier(.34,1.56,.64,1)}
+.guess-opt{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.guess-opt button{padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:var(--surface);font-size:14px;font-weight:600;color:var(--text-primary);cursor:pointer;transition:all .15s;font-family:inherit;outline:none}
+.guess-opt button:hover:not(:disabled){background:var(--border-light);transform:scale(1.03)}
+.guess-opt button:disabled{cursor:default;opacity:.7}
+.guess-opt button.correct{background:#50c878;color:#fff;border-color:#50c878;opacity:1}
+.guess-opt button.wrong{background:#cc0000;color:#fff;border-color:#cc0000;opacity:1}
+.guess-next-btn{display:block;margin:12px auto 0;padding:8px 24px;border-radius:8px;border:none;background:#cc0000;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.guess-next-btn:hover{background:#990000}
+.guess-exit-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;animation:fadeIn .25s ease-out}
+.guess-exit-overlay.fade-out{animation:fadeOut .2s ease-in forwards}
+.guess-exit-card{background:var(--surface);border-radius:16px;padding:24px;max-width:280px;width:85%;box-shadow:0 8px 32px rgba(0,0,0,.25);text-align:center;animation:popIn .25s ease-out}
+.guess-exit-title{font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px}
+.guess-exit-score{font-size:14px;color:var(--text-secondary);margin-bottom:4px}
+.guess-exit-streak{font-size:12px;color:#cc0000;font-weight:600;margin-bottom:4px}
+.guess-exit-high{font-size:13px;color:var(--text-muted);margin-bottom:16px}
+.guess-exit-btns{display:flex;gap:10px;justify-content:center}
+.guess-exit-btn{padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.guess-exit-btn.stay{background:var(--border-light);color:var(--text-secondary)}.guess-exit-btn.stay:hover{background:var(--border)}
+.guess-exit-btn.leave{background:#cc0000;color:#fff}.guess-exit-btn.leave:hover{background:#990000}
+.guess-mode-label{text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.guess-back-btn{background:var(--surface);border:2px solid var(--border);color:var(--text-secondary);cursor:pointer;font-size:13px;font-family:inherit;padding:6px 16px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;transition:all .2s;margin-bottom:10px}
+.guess-back-btn:hover{background:var(--surface-hover);border-color:var(--text-muted);color:var(--text-primary)}
+.guess-mode-card{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:20px 16px;border:2px solid var(--border);border-radius:16px;background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;text-align:center}
+.guess-mode-card:hover{border-color:#cc0000;background:var(--surface-hover);transform:translateY(-2px)}
+.guess-mode-card-icon{font-size:32px;line-height:1}
+.guess-mode-card-name{font-size:15px;font-weight:700;color:var(--text-primary)}
+.guess-mode-card-desc{font-size:11px;color:var(--text-secondary);line-height:1.4}
+.guess-mode-picker{display:flex;flex-direction:column;gap:12px;max-width:320px;margin:20px auto 0;padding:0 16px}
+.guess-picker-title{text-align:center;font-size:18px;font-weight:800;color:var(--text-primary);margin-bottom:8px}
+.guess-clue-wrap{background:var(--guess-bg);border-radius:16px;padding:24px 20px;margin:0 auto 14px;text-align:center}
+.guess-clue-text{font-size:14px;line-height:1.8;color:var(--text-primary)}
+.guess-clue-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.guess-clue-ball{width:36px;height:36px;margin:0 auto 10px;border-radius:50%;background:linear-gradient(to bottom,#cc0000 0%,#cc0000 46%,#222 46%,#222 54%,#fff 54%,#fff 100%);border:3px solid #222;position:relative;flex-shrink:0}
+.guess-clue-ball::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:#fff;border:3px solid #222}
+.guess-timer{text-align:center;font-size:28px;font-weight:800;color:var(--text-primary);margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="header-row1">
+      <button class="hamburger" id="btn-hamburger" title="菜单"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <span class="dot"></span>
+    <h1 class="title">POKEDEX</h1>
+    <span class="dot"></span>
+    <div class="header-controls">
+      <button class="ctrl-btn" id="btn-search" title="搜索"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+      <button class="ctrl-btn" id="btn-toggle" title="切换视图"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+      <button class="ctrl-btn random-btn" id="btn-random" title="随机一只"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8" cy="16" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/></svg></button>
+      <button class="ctrl-btn dark-btn" id="btn-dark" title="深色模式"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+    </div>
+  </div>
+  <p class="subtitle" id="subtitle">加载中...</p>
+  <div class="type-filter-bar" id="type-filters"></div>
+  <div class="search-wrap hidden" id="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search" placeholder="搜索名字或编号..." autocomplete="off">
+  </div>
+</header>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main" id="main">
+  <div class="pull-indicator" id="pull-indicator"></div>
+  <div class="skeleton-grid" id="skeleton"></div>
+  <div class="grid hidden" id="grid"></div>
+    <div class="team-panel" id="team-panel">
+    <div class="team-grid" id="team-grid"></div>
+    <div class="team-rating" id="team-rating"></div>
+  </div>
+  <div class="no-results" id="no-results">
+    <div class="no-results-icon">🥲</div>
+    <div class="no-results-text">没找到这只宝可梦噢~</div>
+    <div class="no-results-hint">试试其他名字或编号吧</div>
+  </div>
+</main>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-hdr">
+    <span class="stitle">Pokedex</span>
+    <button class="sidebar-close" id="sidebar-close">&times;</button>
+  </div>
+  <div class="sidebar-body">
+    <div class="sidebar-item active" data-sidebar="kanto">
+      <span>全部图鉴</span>
+      <span class="tag" id="sidebar-count">0</span>
+    </div>
+    <div class="sidebar-item" data-sidebar="favorites">
+      <span>我的收藏</span>
+      <span class="tag" id="sidebar-fav-count">0</span>
+    </div>
+    <div class="sidebar-gen-wrapper">
+      <div class="sidebar-section-hdr" id="sidebar-gen-hdr">Gen1-9 <span class="sg-arrow" id="sg-arrow">▸</span></div>
+      <div class="sidebar-sub hidden" id="sidebar-sub">
+        <div class="sidebar-item sub" data-gen="1"><span>第一世代</span><span class="tag">1-151</span></div>
+        <div class="sidebar-item sub" data-gen="2"><span>第二世代</span><span class="tag">152-251</span></div>
+        <div class="sidebar-item sub" data-gen="3"><span>第三世代</span><span class="tag">252-386</span></div>
+        <div class="sidebar-item sub" data-gen="4"><span>第四世代</span><span class="tag">387-493</span></div>
+        <div class="sidebar-item sub" data-gen="5"><span>第五世代</span><span class="tag">494-649</span></div>
+        <div class="sidebar-item sub" data-gen="6"><span>第六世代</span><span class="tag">650-721</span></div>
+        <div class="sidebar-item sub" data-gen="7"><span>第七世代</span><span class="tag">722-809</span></div>
+        <div class="sidebar-item sub" data-gen="8"><span>第八世代</span><span class="tag">810-898</span></div>
+        <div class="sidebar-item sub" data-gen="9"><span>第九世代</span><span class="tag">899-1025</span></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ OVERLAY ═══ -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ═══ DRAWER ═══ -->
+<aside class="drawer" id="drawer">
+  <div class="drawer-content" id="drawer-content"></div>
+  <div class="dr-tip" id="dr-tip">
+    <div class="dr-tip-tt" id="dr-tip-tt"></div>
+    <div class="dr-tip-sub" id="dr-tip-sub"></div>
+    <div class="dr-tip-desc" id="dr-tip-desc"></div>
+  </div>
+</aside>
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<button class="scroll-top" id="scroll-top" title="回到顶部"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="20" x2="12" y2="4"/><polyline points="18 10 12 4 6 10"/></svg></button>
+<nav class="bottom-nav">
+  <button class="bottom-nav-item active" data-tab="favorites">
+    <span class="bottom-nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    <span class="bottom-nav-label">主页</span>
+  </button>
+  <button class="bottom-nav-item" data-tab="team">
+    <span class="bottom-nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+    <span class="bottom-nav-label">我的队伍</span>
+  </button>
+  <button class="bottom-nav-item" data-tab="guess">
+    <span class="bottom-nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+    <span class="bottom-nav-label">猜猜我是谁</span>
+  </button>
+  <button class="bottom-nav-item" data-tab="battle">
+    <span class="bottom-nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+    <span class="bottom-nav-label">模拟对战</span>
+  </button>
+</nav>
+<script>
+(function(){
+'use strict';
+
+const POKEAPI='https://pokeapi.co/api/v2';
+const OFFICIAL_CDN='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
+const PIXEL_CDN='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+const BATCH=20;
+const PAGE_SIZE=10;
+
+const TYPE_COLORS={
+  normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8D030',
+  grass:'#78C850',ice:'#98D8D8',fighting:'#C03028',poison:'#A040A0',
+  ground:'#E0C068',flying:'#A890F0',psychic:'#F85888',bug:'#A8B820',
+  rock:'#B8A038',ghost:'#705898',dragon:'#7038F8',dark:'#705848',
+  steel:'#B8B8D0',fairy:'#EE99AC'
+};
+const GEN1_TYPES=Object.keys(TYPE_COLORS);
+const GEN_RANGES=[[1,151],[152,251],[252,386],[387,493],[494,649],[650,721],[722,809],[810,898],[899,1025]];
+const TYPE_CN={
+  normal:'一般',fire:'火',water:'水',electric:'电',grass:'草',
+  ice:'冰',fighting:'格斗',poison:'毒',ground:'地面',
+  flying:'飞行',psychic:'超能力',bug:'虫',rock:'岩石',
+  ghost:'幽灵',dragon:'龙',dark:'恶',steel:'钢',fairy:'妖精'
+};
+
+let pokemonList=[];
+let selectedTypes=new Set();
+let selectedGen=null;
+let viewMode='grid';
+let loadCount=PAGE_SIZE;
+let randomFlashTimer=null;
+let myTeams=[[],[],[]];let activeTeam=0;
+const MAX_TEAM=6;
+let guessScore=0,guessTotal=0,guessStreak=0,guessAnswerId=0,guessLocked=false,guessHighScore=0,guessActive=false,guessMode='novice',guessTimeLeft=60,guessTimer=null;
+try{const t=localStorage.getItem('pokedex_teams');if(t)myTeams=JSON.parse(t);else{var o=localStorage.getItem('pokedex_team');if(o)myTeams[0]=JSON.parse(o);}}catch(e){}
+try{const g=localStorage.getItem('pokedex_guess_highscore');if(g)guessHighScore=parseInt(g,10);}catch(e){}
+let favorites=[];
+let showFavOnly=false;
+try{const t=localStorage.getItem('pokedex_favorites');if(t)favorites=JSON.parse(t);}catch(e){}
+function saveTeams(){localStorage.setItem('pokedex_teams',JSON.stringify(myTeams));}
+function getTeam(){return myTeams[activeTeam]||[];}
+function saveFavorites(){localStorage.setItem('pokedex_favorites',JSON.stringify(favorites));}
+function isFavored(id){return favorites.includes(id);}
+function toggleFav(id){const i=favorites.indexOf(id);if(i===-1){favorites.push(id);saveFavorites();showToast('已添加收藏');}else{favorites.splice(i,1);saveFavorites();showToast('已取消收藏');}
+  var fc=document.getElementById('sidebar-fav-count');if(fc) fc.textContent=favorites.length;
+  return favorites.includes(id);}
+function saveGuessHighScore(){localStorage.setItem('pokedex_guess_highscore',String(guessHighScore));}
+function showToast(msg){var el=document.createElement('div');el.textContent=msg;el.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;animation:fadeOut 2s ease-in forwards 1.5s';document.body.appendChild(el);setTimeout(function(){el.remove();},2000);}
+
+const $=s=>document.querySelector(s);
+const gridEl=$('#grid');
+const skeleton=$('#skeleton');
+const search=$('#search');
+const noResults=$('#no-results');
+const drawer=$('#drawer');
+const drawerContent=$('#drawer-content');
+const overlay=$('#overlay');
+const typeFilters=$('#type-filters');
+const btnToggle=$('#btn-toggle');
+const btnRandom=$('#btn-random');
+
+/* ─── CACHE ─── */
+const abilityCache={},moveCache={},typeCache={};
+function idFromUrl(url){return parseInt(url.match(/\/(\d+)\/?$/)[1])}
+async function fetchAbility(id){
+  if(abilityCache[id]) return abilityCache[id];
+  try{
+    const r=await fetch(`${POKEAPI}/ability/${id}`);const d=await r.json();
+    abilityCache[id]={
+      nameCN:d.names?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.name||d.name,
+      desc:d.flavor_text_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.flavor_text?.replace(/[\n\f]/g,' ')||
+           d.effect_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.short_effect?.replace(/[\n\f]/g,' ')||'暂无描述'
+    };
+    return abilityCache[id];
+  }catch(e){return {nameCN:'未知',desc:''}}
+}
+async function fetchMove(id){
+  if(moveCache[id]) return moveCache[id];
+  try{
+    const r=await fetch(`${POKEAPI}/move/${id}`);const d=await r.json();
+    moveCache[id]={
+      nameCN:d.names?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.name||d.name,
+      type:d.type?.name||'',
+      category:d.damage_class?.name||'',
+      desc:d.flavor_text_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.flavor_text?.replace(/[\n\f]/g,' ')||
+           d.effect_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.short_effect?.replace(/[\n\f]/g,' ')||'暂无描述'
+    };
+    return moveCache[id];
+  }catch(e){return {nameCN:'未知',type:'',category:'',desc:''}}
+}
+async function fetchType(name,force){
+  if(!force&&typeCache[name]) return typeCache[name];
+  try{
+    const r=await fetch(`${POKEAPI}/type/${name}`);const d=await r.json();
+    typeCache[name]={
+      double_from:d.damage_relations.double_damage_from.map(t=>t.name),
+      half_from:d.damage_relations.half_damage_from.map(t=>t.name),
+      no_from:d.damage_relations.no_damage_from.map(t=>t.name),
+      double_to:d.damage_relations.double_damage_to.map(t=>t.name),
+      half_to:d.damage_relations.half_damage_to.map(t=>t.name),
+      no_to:d.damage_relations.no_damage_to.map(t=>t.name)
+    };
+    return typeCache[name];
+  }catch(e){return null;}
+}
+const CAT_CN={physical:'物攻',special:'特攻',status:'变化'};
+
+/* ─── EVOLUTION ─── */
+async function fetchEvolution(url){
+  try{
+    const r=await fetch(url);const d=await r.json();
+    const chain=[];
+    function walk(node,stage){
+      if(!chain[stage]) chain[stage]=[];
+      const id=parseInt(node.species.url.match(/\/(\d+)\/?$/)[1]);
+      chain[stage].push({id,name:node.species.name});
+      node.evolves_to.forEach(c=>walk(c,stage+1));
+    }
+    walk(d.chain,0);return chain;
+  }catch(e){return null}
+}
+
+/* ─── WEB AUDIO BEEP ─── */
+let audioCtx=null;
+function playTick(){
+  try{
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.frequency.value=880;
+    o.type='sine';
+    g.gain.setValueAtTime(.15,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.08);
+    o.start(audioCtx.currentTime);
+    o.stop(audioCtx.currentTime+.08);
+  }catch(e){}
+}
+
+/* ─── INIT ─── */
+async function init(){
+  renderSkeleton(30);
+  try{
+    await fetchAll();
+    $('#subtitle').textContent=`全部宝可梦 — ${pokemonList.length} 种`;
+    $('#sidebar-count').textContent=pokemonList.length;var _fc=document.getElementById('sidebar-fav-count');if(_fc)_fc.textContent=favorites.length;
+    renderTypeFilters();
+    skeleton.classList.add('hidden');
+    gridEl.classList.remove('hidden');
+    renderView();
+    adjustMainPadding();
+  // Preload visible sprites
+
+    loadDetailsBatches();
+  }catch(err){
+    skeleton.innerHTML=`<div class="no-results show" style="grid-column:1/-1">
+      <div class="no-results-icon">⚠</div>
+      <div class="no-results-text">数据加载失败，请检查网络</div>
+    </div>`;
+    console.error(err);
+  }
+}
+
+/* ─── SKELETON ─── */
+function renderSkeleton(count){
+  skeleton.innerHTML=Array.from({length:count},()=>
+    '<div class="skel-card"><div class="skel-id"></div><div class="skel-img"></div><div class="skel-name"></div><div class="skel-types"><div class="skel-type"></div><div class="skel-type"></div></div></div>'
+  ).join('');
+}
+
+/* ─── FETCH ─── */
+async function fetchAll(){
+  const res=await fetch(`${POKEAPI}/pokemon?limit=2000`);
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json=await res.json();
+  pokemonList=json.results.map(p=>{
+    const id=parseInt(p.url.match(/\/(\d+)\/?$/)[1]);
+    return {id,name:p.name,sprite:`${PIXEL_CDN}/${id}.png`,types:[],stats:null,height:null,weight:null};
+  }).filter(p=>p.id<=1025);
+}
+
+async function fetchOne(id){
+  const res=await fetch(`${POKEAPI}/pokemon/${id}`);
+  if(!res.ok) throw new Error(`Failed #${id}`);
+  return await res.json();
+}
+async function fetchSpecies(id){
+  const res=await fetch(`${POKEAPI}/pokemon-species/${id}`);
+  if(!res.ok) return null;
+  return await res.json();
+}
+
+/* ─── TYPE FILTERS ─── */
+function renderTypeFilters(){
+  let h='<button class="type-filter-btn all-btn active" data-type="">全部</button>';
+  GEN1_TYPES.forEach(t=>{h+=`<button class="type-filter-btn" data-type="${t}" style="--tc:${TYPE_COLORS[t]}">${TYPE_CN[t]}</button>`;});
+  typeFilters.innerHTML=h;
+  typeFilters.addEventListener('click',e=>{
+    const btn=e.target.closest('.type-filter-btn');
+    if(!btn) return;
+    const t=btn.dataset.type||null;
+    if(t===null){selectedTypes.clear();}
+    else if(selectedTypes.has(t)){selectedTypes.delete(t);}
+    else if(selectedTypes.size>=2){selectedTypes.delete([...selectedTypes][0]);selectedTypes.add(t);}
+    else{selectedTypes.add(t);}
+    updateTypeFilterUI();
+    applyFilters();
+  });
+}
+function updateTypeFilterUI(){
+  typeFilters.querySelectorAll('.type-filter-btn').forEach(b=>{
+    const t=b.dataset.type||null;
+    if(t===null) b.classList.toggle('active',selectedTypes.size===0);
+    else b.classList.toggle('active',selectedTypes.has(t));
+  });
+}
+
+/* ─── RENDER ─── */
+function renderView(){
+  const full=getFilteredList();
+  if(loadCount>full.length) loadCount=full.length;
+  const items=full.slice(0,loadCount);
+
+  gridEl.classList.toggle('list-view',viewMode==='list');
+  gridEl.innerHTML=items.map(p=>renderCard(p)).join('');
+  noResults.classList.toggle('show',full.length===0);
+
+  // Scroll sentinel for infinite scroll
+  if(full.length>items.length){
+    const sentinel=document.createElement('div');
+    sentinel.className='scroll-sentinel';
+    sentinel.style.cssText='height:1px;grid-column:1/-1';
+    gridEl.appendChild(sentinel);
+    scrollObserver.disconnect();
+    scrollObserver.observe(sentinel);
+  }
+
+  applyCardGlows();
+}
+
+function renderCard(p){
+  const cn=p.nameCN||p.name;
+  const th=p.types.length?p.types.map(t=>`<span class="type-badge type-${t.type.name}">${TYPE_CN[t.type.name]||t.type.name}</span>`).join('') : '';
+  const favIndicator=isFavored(p.id)?'<img class="card-fav-indicator" src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Ccircle cx=%2712%27 cy=%2712%27 r=%2710%27 fill=%27%23fff%27 stroke=%27%23333%27 stroke-width=%271.5%27/%3E%3Cpath d=%27M2 12a10 10 0 0 1 20 0%27 fill=%27%23cc0000%27/%3E%3Cpath d=%27M2 12h20%27 stroke=%27%23333%27 stroke-width=%271.5%27 fill=%27none%27/%3E%3Ccircle cx=%2712%27 cy=%2712%27 r=%273%27 fill=%27%23fff%27 stroke=%27%23333%27 stroke-width=%271.5%27/%3E%3C/svg%3E" alt="">':'';
+  return `<div class="card" data-id="${p.id}" data-name="${p.name}" data-namecn="${cn}" role="button" tabindex="0">
+    <div class="card-id">#${String(p.id).padStart(3,'0')}</div>
+    <div class="card-img-wrap"><img class="card-img" src="${p.sprite}" alt="${cn}" onerror="imgFallback(this)">${favIndicator}</div>
+    <div class="card-name-row">
+      <span class="card-name">${cn}</span>
+      <span class="card-badges" data-badges-for="${p.id}">${th}</span>
+    </div>
+  </div>`;
+}
+
+/* ─── CARD TYPE GLOW ─── */
+function applyCardGlows(){
+  pokemonList.forEach(p=>{
+    if(!p.types.length) return;
+    const card=document.querySelector(`.card[data-id="${p.id}"]`);
+    if(!card) return;
+    const t=p.types[0].type.name;
+    const c=TYPE_COLORS[t];
+    card.setAttribute('data-glow','');
+    card.style.setProperty('--glow-color',c);
+    card.style.setProperty('--glow-glow',c+'40');
+  });
+}
+
+/* ─── INFINITE SCROLL ─── */
+const scrollObserver=new IntersectionObserver(function(entries){
+  if(entries[0].isIntersecting){
+    const full=getFilteredList();
+    if(loadCount<full.length){
+      loadCount=Math.min(loadCount+PAGE_SIZE,full.length);
+      playTick();
+      renderView();
+    }
+  }
+});
+
+/* ─── SWIPE ─── */
+let swipeX=0,swipeY=0,pullStartY=0,pullDist=0,pullLoading=false;
+const PULL_THRESHOLD=60;
+gridEl.addEventListener('touchstart',e=>{
+  const t=e.changedTouches[0];
+  swipeX=t.clientX;swipeY=t.clientY;
+  if(window.scrollY===0&&!pullLoading) pullStartY=t.clientY;
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(pullLoading||pullStartY===0) return;
+  const dy=e.changedTouches[0].clientY-pullStartY;
+  if(dy>0&&window.scrollY===0){
+    pullDist=Math.min(dy*0.5,PULL_THRESHOLD*1.5);
+    var pi=document.querySelector('.pull-indicator');
+    if(!pi) return;
+    pi.classList.toggle('pull',pullDist>10);
+    pi.innerHTML=pullDist<PULL_THRESHOLD?'<span class="spin"></span>下拉刷新':'<span class="spin"></span>松开刷新';
+  }
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(pullLoading||pullStartY===0) return;
+  if(pullDist>=PULL_THRESHOLD&&window.scrollY===0){
+    pullLoading=true;
+    var pi=document.querySelector('.pull-indicator');
+    if(pi){pi.className='pull-indicator loading';pi.innerHTML='<span class="spin"></span>刷新中...';}
+    // Perform refresh
+    (async function(){
+      pokemonList=[];
+      loadCount=PAGE_SIZE;
+      renderSkeleton(30);
+      skeleton.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+      try{
+        await fetchAll();
+        $('#subtitle').textContent='全部宝可梦 — '+pokemonList.length+' 种';
+        $('#sidebar-count').textContent=pokemonList.length;var _fc=document.getElementById('sidebar-fav-count');if(_fc)_fc.textContent=favorites.length;
+        skeleton.classList.add('hidden');
+        gridEl.classList.remove('hidden');
+        renderView();
+        adjustMainPadding();
+        loadDetailsBatches();
+      }catch(err){}
+      pullLoading=false;pullStartY=0;pullDist=0;
+      if(pi){pi.className='pull-indicator';pi.innerHTML='';}
+    })();
+  }else{
+    pullStartY=0;pullDist=0;
+    var pi=document.querySelector('.pull-indicator');
+    if(pi){pi.className='pull-indicator';pi.innerHTML='';}
+  }
+},{passive:true});
+
+/* ─── BATCH DETAIL LOAD ─── */
+async function loadDetailsBatches(){
+  for(let i=0;i<pokemonList.length;i+=BATCH){
+    const batch=pokemonList.slice(i,i+BATCH);
+    const results=await Promise.all(batch.map(p=>Promise.all([
+      fetchOne(p.id).catch(()=>null),
+      fetchSpecies(p.id).catch(()=>null)
+    ])));
+    results.forEach(([data,species],idx)=>{
+      if(!data) return;
+      const p=batch[idx];
+      p.types=data.types||[];
+      p.stats=data.stats||[];
+      p.abilities=data.abilities||[];
+      p.moves=data.moves||[];
+      p.height=data.height;
+      p.weight=data.weight;
+      p.cry=data.cries?.latest||'';
+      if(species){
+        p.nameCN=species.names?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.name||p.name;
+        p.flavorText=species.flavor_text_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.flavor_text?.replace(/[\n\f]/g,' ')||'';
+        p.habitat=species.habitat?.name||'';
+        if(species.evolution_chain?.url){fetchEvolution(species.evolution_chain.url).then(ev=>{p.evolution=ev;});}
+      }
+    });
+    batch.forEach(p=>{
+      const card=document.querySelector(`.card[data-id="${p.id}"]`);
+      if(!card) return;
+      const badges=card.querySelector('.card-badges');
+      if(badges&&p.types.length&&!badges.children.length){
+        badges.innerHTML=p.types.map(t=>`<span class="type-badge type-${t.type.name}">${TYPE_CN[t.type.name]||t.type.name}</span>`).join('');
+      }
+      if(p.nameCN){
+        const nameEl=card.querySelector('.card-name');
+        if(nameEl) nameEl.textContent=p.nameCN;
+        card.dataset.namecn=p.nameCN;
+      }
+    });
+    applyCardGlows();
+    // Preload sprites ahead
+    var _next=pokemonList.slice(i+BATCH,i+BATCH*2+20);
+    _next.forEach(function(x){var _i=new Image();_i.src=PIXEL_CDN+'/'+x.id+'.png';});
+  }
+}
+
+/* ─── FILTERING ─── */
+function getFilteredList(){
+  const q=search.value.trim().toLowerCase();
+  let list=pokemonList;
+  if(q){
+    list=list.filter(p=>String(p.id)===q||String(p.id).padStart(3,'0')===q||p.name.includes(q)||(p.nameCN||'').includes(q));
+  }
+  if(selectedTypes.size){
+    list=list.filter(p=>[...selectedTypes].every(s=>p.types.some(t=>t.type.name===s)));
+  }
+  if(selectedGen){
+    const r=GEN_RANGES[selectedGen-1];
+    list=list.filter(p=>p.id>=r[0]&&p.id<=r[1]);
+  }
+  if(showFavOnly){
+    list=favorites.length?list.filter(p=>favorites.includes(p.id)):[];
+  }
+  return list;
+}
+
+function applyFilters(){loadCount=PAGE_SIZE;renderView();}
+function imgFallback(el){try{if(!el.dataset.fallback){el.dataset.fallback='1';var m=el.src.match(/\/(\d+)\.png/);if(m){el.src=OFFICIAL_CDN+'/'+m[1]+'.png';el.onerror=function(){imgFallback(this);};return;}}el.onerror=null;el.style.display='none';if(!el.parentElement.querySelector('.no-sprite')){var t=document.createElement('span');t.className='no-sprite';t.textContent='暂无形象';el.parentElement.appendChild(t);}}catch(e){}}
+function shuffleArray(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ─── VIEW TOGGLE ─── */
+btnToggle.addEventListener('click',()=>{
+  viewMode=viewMode==='grid'?'list':'grid';
+  btnToggle.innerHTML=viewMode==='grid'
+    ?'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>'
+    :'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/></svg>';
+  applyFilters();
+});
+
+/* ─── SEARCH ─── */
+let searchTimer;
+search.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(applyFilters,80);});
+
+/* ─── SEARCH TOGGLE ─── */
+function adjustMainPadding(){
+  var hh=document.querySelector('.header').offsetHeight;
+  document.getElementById('main').style.paddingTop=(hh+12)+'px';
+}
+$('#btn-search').addEventListener('click',function(){
+  var sw=document.getElementById('search-wrap');
+  var hidden=sw.classList.contains('hidden');
+  sw.classList.toggle('hidden');
+  this.classList.toggle('active');
+  if(hidden){
+    setTimeout(function(){document.getElementById('search').focus();},100);
+  }else{
+    document.getElementById('search').blur();
+    document.getElementById('search').value='';
+    applyFilters();
+  }
+  setTimeout(adjustMainPadding,50);
+});
+window.addEventListener('resize',adjustMainPadding);
+/* ─── SCROLL TO TOP ─── */
+var scrollTopBtn=document.getElementById('scroll-top');
+var scrollTopThreshold=300;
+window.addEventListener('scroll',function(){
+  scrollTopBtn.classList.toggle('show',window.scrollY>scrollTopThreshold);
+},{passive:true});
+scrollTopBtn.addEventListener('click',function(){
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+/* ─── RANDOM ENCOUNTER ─── */
+btnRandom.addEventListener('click',()=>{
+  const full=getFilteredList();
+  if(!full.length) return;
+  const pick=full[Math.floor(Math.random()*full.length)];
+  if(loadCount<full.length){
+    loadCount=full.length;
+    renderView();
+  }
+  // use RAF to wait for DOM update
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const card=document.querySelector(`.card[data-id="${pick.id}"]`);
+      if(!card) return;
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      card.classList.remove('random-flash');
+      void card.offsetWidth;
+      card.classList.add('random-flash');
+      clearTimeout(randomFlashTimer);
+      randomFlashTimer=setTimeout(()=>card.classList.remove('random-flash'),2600);
+    });
+  });
+  // Play cry
+  if(pick.cry){try{new Audio(pick.cry).play();}catch(e){}}
+});
+
+/* ─── DARK MODE ─── */
+function setTheme(dark){
+  document.documentElement.setAttribute('data-theme',dark?'dark':'');
+  localStorage.setItem('pokedex_theme',dark?'dark':'');
+  $('#btn-dark').innerHTML=dark
+    ?'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+    :'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+}
+$('#btn-dark').addEventListener('click',function(){
+  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  setTheme(!isDark);
+});
+(function(){
+  var saved=localStorage.getItem('pokedex_theme');
+  if(saved==='dark') setTheme(true);
+})();
+
+/* ─── DRAWER ─── */
+gridEl.addEventListener('click',e=>{
+  const card=e.target.closest('.card');
+  if(card) openDrawer(parseInt(card.dataset.id));
+});
+gridEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){
+    const card=e.target.closest('.card');
+    if(card){e.preventDefault();openDrawer(parseInt(card.dataset.id));}
+  }
+});
+
+async function openDrawer(id){
+  drawerContent.innerHTML=`<div class="drawer-loading"><div class="pokeball"><div class="pokeball-center"></div></div><span class="drawer-loading-text">加载中...</span></div>`;
+  drawer.classList.add('open');
+  overlay.classList.add('active');
+  document.body.style.overflow='hidden';
+  // Priority load card image
+  var pc=document.querySelector('.card[data-id="'+id+'"] .card-img');if(pc){pc.loading='eager';var src=pc.src;pc.src='';pc.src=src;}
+
+  let p=pokemonList.find(p=>p.id===id);
+  if(!p||!p.stats){
+    try{
+      const [data,species]=await Promise.all([fetchOne(id),fetchSpecies(id).catch(()=>null)]);
+      p=p||{id,name:'',sprite:`${PIXEL_CDN}/${id}.png`};
+      p.types=data.types||[];p.stats=data.stats||[];
+      p.abilities=data.abilities||[];p.moves=data.moves||[];
+      p.height=data.height;p.weight=data.weight;
+      p.cry=data.cries?.latest||'';
+      if(species){
+        p.nameCN=species.names?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.name||p.name;
+        p.flavorText=species.flavor_text_entries?.find(n=>n.language.name==='zh-hans'||n.language.name==='zh-Hant')?.flavor_text?.replace(/[\n\f]/g,' ')||'';
+        p.habitat=species.habitat?.name||'';
+        if(species.evolution_chain?.url){try{p.evolution=await fetchEvolution(species.evolution_chain.url);}catch(e){}}
+        if(species.varieties){
+          p.forms=species.varieties.map(function(v){return{id:idFromUrl(v.pokemon.url),name:v.pokemon.name,isDefault:v.is_default};});
+        }
+      }
+    }catch(e){
+      drawerContent.innerHTML=`<div class="drawer-loading"><span class="drawer-loading-text">加载失败，请重试</span></div>`;
+      return;
+    }
+  }
+  if(!p.forms){
+    try{
+      var species=await fetchSpecies(id);
+      if(species&&species.varieties){
+        p.forms=species.varieties.map(function(v){return{id:idFromUrl(v.pokemon.url),name:v.pokemon.name,isDefault:v.is_default};});
+      }
+    }catch(e){}
+  }
+  if(!p.forms) p.forms=[{id:p.id,name:p.name,isDefault:true}];
+  renderDrawer(p);
+}
+
+function renderDrawer(p){
+  const cn=p.nameCN||p.name;
+  const forms=p.forms||[{id:p.id,name:p.name,isDefault:true}];
+  const fi=p._formIdx||0;
+  const hm=(p.height/10).toFixed(1);
+  const wk=(p.weight/10).toFixed(1);
+  const statMap={};(p.stats||[]).forEach(s=>{statMap[s.stat.name]=s.base_stat});
+
+  // Stat bars (6 stats with Chinese names)
+  const statDefs=[
+    {key:'hp',label:'HP',cls:'hp'},
+    {key:'attack',label:'攻击',cls:'attack'},
+    {key:'defense',label:'防御',cls:'defense'},
+    {key:'special-attack',label:'特攻',cls:'spatk'},
+    {key:'special-defense',label:'特防',cls:'spdef'},
+    {key:'speed',label:'速度',cls:'speed'}
+  ];
+  const bars=statDefs.map(s=>{
+    const v=statMap[s.key]||0;
+    return `<div class="stat-row"><span class="stat-label">${s.label}</span><div class="stat-bar-bg"><div class="stat-bar-fill ${s.cls}" style="width:${Math.min(v/200*100,100)}%"></div></div><span class="stat-val">${v}</span></div>`;
+  }).join('');
+  const totalStat=statDefs.reduce((sum,s)=>sum+(statMap[s.key]||0),0);
+
+  // Build SVG radar string
+  const svgKeys=['hp','attack','defense','special-attack','special-defense','speed'];
+  const svgVals=svgKeys.map(k=>statMap[k]||0);
+  const svgLabels=['HP','攻击','防御','特攻','特防','速度'];
+  const scx=100,scy=75,sr=50;
+  const sangles=svgLabels.map((_,i)=>(Math.PI*2*i/6)-Math.PI/2);
+  const spt=(i,rr)=>`${scx+rr*Math.cos(sangles[i])},${scy+rr*Math.sin(sangles[i])}`;
+  const sgrids=[1,2,3,4].map(l=>`<polygon points="${sangles.map((_,i)=>spt(i,sr*l/4)).join(' ')}" fill="none" stroke="#e0d8c8" stroke-width="1"/>`).join('');
+  const saxes=sangles.map((a,i)=>`<line x1="${scx}" y1="${scy}" x2="${scx+sr*Math.cos(a)}" y2="${scy+sr*Math.sin(a)}" stroke="#e0d8c8" stroke-width="1"/>`).join('');
+  const slabels=svgLabels.map((l,i)=>{const x=scx+(sr+14)*Math.cos(sangles[i]),y=scy+(sr+14)*Math.sin(sangles[i]);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#888" font-size="9">${l}</text>`;}).join('');
+  const sdata=sangles.map((_,i)=>spt(i,sr*Math.min(svgVals[i],200)/200)).join(' ');
+  const sdots=sangles.map((_,i)=>{const rr=sr*Math.min(svgVals[i],200)/200;return `<circle cx="${scx+rr*Math.cos(sangles[i])}" cy="${scy+rr*Math.sin(sangles[i])}" r="2.5" fill="#cc0000"/>`;}).join('');
+  const radarSvg=`<svg viewBox="0 0 200 150" width="100%" style="max-width:180px;display:block;margin:0 auto">${sgrids}${saxes}${slabels}<polygon points="${sdata}" fill="rgba(204,0,0,.12)" stroke="#cc0000" stroke-width="2"/>${sdots}</svg>`;
+
+  // Nature recommendation from highest base stat
+  const order=['hp','attack','defense','special-attack','special-defense','speed'];
+  let bestIdx=1,bestVal=0;
+  (p.stats||[]).forEach(s=>{
+    const i=order.indexOf(s.stat.name);
+    if(i>=0&&s.base_stat>bestVal){bestVal=s.base_stat;bestIdx=i;}
+  });
+  const natures=[
+    {name:'慎重',desc:'+特防 -特攻'},
+    {name:'固执',desc:'+攻击 -特攻'},
+    {name:'淘气',desc:'+防御 -特攻'},
+    {name:'内敛',desc:'+特攻 -攻击'},
+    {name:'温和',desc:'+特防 -攻击'},
+    {name:'胆小',desc:'+速度 -攻击'}
+  ];
+  const nature=natures[bestIdx];
+
+  // Abilities
+  const abilityHtml=(p.abilities||[]).map(a=>`<span class="dr-ability" data-aurl="${a.ability.url}">${a.ability.name}</span>`).join('')||'暂无';
+  const primaryColor=p.types[0]?TYPE_COLORS[p.types[0].type.name]||'#ddd':'#ddd';
+
+  // Moves — only level-up learn method
+  const allMoves=p.moves||[];
+  const moves=allMoves.filter(m=>m.version_group_details?.some(d=>d.move_learn_method?.name==='level-up'));
+  const moveHtml=moves.map(m=>`<span class="dr-move" data-murl="${m.move.url}">${m.move.name}</span>`).join('');
+
+  // Evolution chain
+  let evolHtml='';
+  if(p.evolution){
+    evolHtml=p.evolution.map((stage,si)=>{
+      const items=stage.map(ev=>{
+        const ecn=pokemonList.find(x=>x.id===ev.id)?.nameCN||ev.name;
+        return `<span class="dr-evo" data-evo-id="${ev.id}"><img src="${PIXEL_CDN}/${ev.id}.png" class="dr-evo-img">${ecn}</span>`;
+      }).join('');
+      return (si>0?' <span class="dr-evo-arr">→</span> ':'')+items;
+    }).join('');
+  }
+
+  // Flavor text
+  const flavor=p.flavorText||'暂无描述';
+
+  drawerContent.innerHTML=
+    `<button class="dr-close" id="dr-close">&times;</button>
+    <div class="dr-img-wrap scanning"><button class="dr-shiny-btn" id="dr-shiny-btn">闪</button><button class="dr-fav-btn" id="dr-fav-btn">${isFavored(p.id)?'<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>':'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'}</button><div class="dr-img-float"><img class="dr-img" src="${PIXEL_CDN}/${forms[fi].id}.png" alt="${cn}" data-fi="${fi}" data-shiny="0" onerror="imgFallback(this)"></div><span class="dr-form-indicator" id="dr-form-indicator"></span><button class="dr-team-btn" id="dr-team-btn">队</button><button class="dr-sound-btn" id="dr-sound-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button></div>
+    <div class="dr-id">#${String(p.id).padStart(3,'0')}</div>
+    <div style="text-align:center">
+      <div class="dr-name">${cn}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${hm}m / ${wk}kg</div>
+    </div>
+    <div class="dr-types">${p.types.map(t=>`<span class="type-badge type-${t.type.name}">${TYPE_CN[t.type.name]||t.type.name}</span>`).join('')}</div>
+
+    <div class="dr-pages-slider" id="dr-pages">
+      <div class="dr-page">
+        <div class="dr-section">
+          <div class="dr-section-title">图鉴描述</div>
+          <div class="dr-desc">${flavor}</div>
+        </div>
+        ${evolHtml?`<div class="dr-section"><div class="dr-section-title">进化链</div><div style="display:flex;flex-wrap:wrap;gap:4px">${evolHtml}</div></div>`:''}
+        <div class="dr-section">
+          <div class="dr-section-title">特性</div>
+          <div class="dr-abilities" style="--ac:${primaryColor}">${abilityHtml}</div>
+        </div>
+        <div class="dr-section">
+          <div class="dr-section-title">推荐性格</div>
+          <span class="dr-nature">${nature.name}（${nature.desc}）</span>
+        </div>
+        <div class="dr-section">
+          <div class="dr-section-title">可学习技能 (${moves.length})</div>
+          <div class="dr-moves-scroll">${moveHtml}</div>
+          
+        </div>
+      </div>
+      <div class="dr-page">
+        <div class="dr-section">
+          <div class="dr-section-title">属性克制</div>
+          <div class="dr-eff-grid" id="dr-eff-grid">加载中...</div>
+        </div>
+        <div class="dr-section" style="padding-top:0;margin-bottom:8px">
+          <div class="dr-section-title">种族值 <span style="font-size:9px;color:var(--text-muted);font-weight:400" id="dr-stats-label">条形图</span></div>
+          <div id="dr-stats-area" style="cursor:pointer">
+            <div id="dr-stats-bars">${bars}<div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px solid var(--border-light);margin-top:4px"><span class="stat-label">总和</span><span style="font-weight:800;font-size:13px;color:var(--text-primary)">${totalStat}</span></div></div>
+            <div id="dr-stats-radar" style="display:none">${radarSvg}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dr-pages-dots">
+      <span class="dr-pages-dot active" data-idx="0"></span>
+      <span class="dr-pages-dot" data-idx="1"></span>
+    </div>`;
+
+  // Pop animation
+  const floatEl=drawerContent.querySelector('.dr-img-float');
+  if(floatEl){floatEl.classList.remove('pop');void floatEl.offsetWidth;floatEl.classList.add('pop');}
+
+  // Play cry on first open
+  if(p.cry&&!p._cryPlayed){
+    try{new Audio(p.cry).play();}catch(e){}
+    p._cryPlayed=true;
+  }
+  // Sound button
+  function updateTeamBtn(tb,pkg){
+    tb.textContent='\u961f';tb.className='dr-team-btn';
+  }
+  var tb=document.getElementById('dr-team-btn');
+  if(tb){
+    updateTeamBtn(tb,p);
+    tb.addEventListener('click',function(){
+      // Show team picker
+      var ov=document.createElement('div');
+      ov.className='team-analysis-overlay';
+      var ph='<div class="team-analysis-modal" style="padding:20px;max-width:280px"><div style="font-size:15px;font-weight:800;color:var(--text-primary);text-align:center;margin-bottom:12px">选择要加入的队伍</div>';
+      for(var ti=0;ti<3;ti++){
+        var tc=myTeams[ti].length;
+        ph+='<button class="team-pick-btn" data-idx="'+ti+'"><span style="font-size:14px;font-weight:700">队伍'+(ti+1)+'</span> <span style="font-size:12px;color:var(--text-muted)">'+tc+'/6</span></button>';
+      }
+      ph+='</div>';
+      ov.innerHTML=ph;
+      document.body.appendChild(ov);
+      ov.querySelectorAll('.team-pick-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var chosen=parseInt(this.dataset.idx);ov.remove();
+          var team=myTeams[chosen];
+          var existIdx=team.findIndex(function(x){return x.id===p.id;});
+          if(existIdx!==-1){
+            team.splice(existIdx,1);saveTeams();updateTeamBtn(tb,p);showToast('已移出队伍'+(chosen+1));
+          }else if(team.length>=MAX_TEAM){
+            showReplaceModal(team,function(replaceIdx){
+              team.splice(replaceIdx,1);team.push({id:p.id,name:p.name,nameCN:p.nameCN||p.name});saveTeams();updateTeamBtn(tb,p);showToast('已加入队伍'+(chosen+1));
+            });
+          }else{
+            team.push({id:p.id,name:p.name,nameCN:p.nameCN||p.name});saveTeams();updateTeamBtn(tb,p);showToast('已加入队伍'+(chosen+1));
+          }
+        });
+      });
+      ov.addEventListener('click',function(e){if(e.target===ov) ov.remove();});
+    });
+  }
+
+  var sb=document.getElementById('dr-sound-btn');
+  if(sb&&p.cry){
+    sb.addEventListener('click',function(){try{new Audio(p.cry).play();}catch(e){}});
+  }
+
+  const cb=document.getElementById('dr-close');
+  if(cb) cb.addEventListener('click',closeDrawer);
+  const wrap=drawerContent.querySelector('.dr-img-wrap');
+  if(wrap) setTimeout(()=>wrap.classList.remove('scanning'),600);
+
+  // Tooltip
+  const tip=$('#dr-tip'),tipTT=$('#dr-tip-tt'),tipSub=$('#dr-tip-sub'),tipDesc=$('#dr-tip-desc');
+  function hideTip(){tip.classList.remove('show');}
+  function showTip(el,title,sub,desc){
+    const r=el.getBoundingClientRect();
+    tipTT.textContent=title;tipSub.textContent=sub||'';
+    tipDesc.textContent=desc||'';
+    let top=r.top-10,left=Math.max(10,Math.min(r.left-60,window.innerWidth-290));
+    if(top<60) top=r.bottom+6;
+    tip.style.top=top+'px';tip.style.left=left+'px';
+    tip.classList.add('show');
+  }
+
+  // Click ability → show cached description
+  drawerContent.querySelectorAll('.dr-ability[data-aurl]').forEach(el=>{
+    el.style.cursor='pointer';
+    el.addEventListener('click',async e=>{
+      e.stopPropagation();
+      const data=await fetchAbility(idFromUrl(el.dataset.aurl));
+      showTip(el,data.nameCN,'特性',data.desc);
+    });
+  });
+  // Click move → show cached description
+  drawerContent.querySelectorAll('.dr-move[data-murl]').forEach(el=>{
+    el.style.cursor='pointer';
+    el.addEventListener('click',async e=>{
+      e.stopPropagation();
+      const data=await fetchMove(idFromUrl(el.dataset.murl));
+      const catCN=CAT_CN[data.category]||data.category;
+      const typeCN=TYPE_CN[data.type]||data.type;
+      showTip(el,data.nameCN,typeCN+(catCN?' · '+catCN:''),data.desc);
+    });
+  });
+
+  // Click blank → close tip (global, registered once)
+  if(!window._tipReady){
+    document.addEventListener('click',function(e){
+      const t=$('#dr-tip');
+      if(t&&t.classList.contains('show')&&!e.target.closest('.dr-tip,.dr-ability,.dr-move'))
+        {t.classList.remove('show');t.style.display='';}
+    });
+    window._tipReady=true;
+  }
+  drawer.addEventListener('scroll',hideTip,{passive:true});
+
+  // Batch pre-load all abilities & moves Chinese data
+  (async()=>{
+    // Abilities first (only a few)
+    await Promise.all((p.abilities||[]).map(a=>fetchAbility(idFromUrl(a.ability.url))));
+    drawerContent.querySelectorAll('.dr-ability[data-aurl]').forEach(el=>{
+      const data=abilityCache[idFromUrl(el.dataset.aurl)];
+      if(data) el.textContent=data.nameCN;
+    });
+    // Moves in batches
+    for(let i=0;i<moves.length;i+=10){
+      const batch=moves.slice(i,i+10);
+      await Promise.all(batch.map(m=>fetchMove(idFromUrl(m.move.url))));
+      batch.forEach(m=>{
+        const data=moveCache[idFromUrl(m.move.url)];
+        const el=drawerContent.querySelector(`.dr-move[data-murl="${m.move.url}"]`);
+        if(data&&el){
+          const tc=TYPE_COLORS[data.type]||'#999';
+          const catCN=CAT_CN[data.category]||'';
+          el.innerHTML=`<span class="dr-move-dot" style="background:${tc}"></span>${data.nameCN}${catCN?` <span class="dr-move-cat ${data.category}">${catCN}</span>`:''}`;
+        }
+      });
+    }
+  })();
+
+  // Pages nav
+  const pSlider=document.getElementById('dr-pages');
+  const pDots=drawerContent.querySelectorAll('.dr-pages-dot');
+  const pPages=pSlider?pSlider.querySelectorAll('.dr-page'):[];
+  function goPage(i){
+    pPages.forEach((p,j)=>{p.classList.toggle('hidden',j!==i);});
+    pDots.forEach((d,j)=>d.classList.toggle('active',j===i));
+  }
+  if(pSlider&&pPages.length){
+    goPage(0);
+    pDots.forEach(d=>{d.addEventListener('click',()=>{goPage(parseInt(d.dataset.idx));});});
+    let sx=-1;
+    pSlider.addEventListener('touchstart',e=>{
+      if(e.target.closest('.dr-moves-scroll')){sx=-1;return;}
+      sx=e.changedTouches[0].clientX;
+    },{passive:true});
+    pSlider.addEventListener('touchend',e=>{
+      if(sx<0) return;
+      const dx=e.changedTouches[0].clientX-sx;
+      if(Math.abs(dx)>40){
+        const cur=[...pPages].findIndex(p=>!p.classList.contains('hidden'));
+        const next=dx<0?Math.min(cur+1,pPages.length-1):Math.max(cur-1,0);
+        if(next!==cur) goPage(next);
+      }
+    },{passive:true});
+  }
+
+  // Evolution click
+  drawerContent.addEventListener('click',e=>{
+    const evo=e.target.closest('.dr-evo');
+    if(evo) openDrawer(parseInt(evo.dataset.evoId));
+  });
+
+  // Form indicator
+  var fLabel=document.getElementById('dr-form-indicator');
+  if(fLabel&&forms.length>1){
+    var baseName=p.name;
+    var fs=forms[fi].name;
+    var suffix=fs===baseName?'原始形态':fs.replace(baseName+'-','');
+    fLabel.textContent=(fi+1)+'/'+forms.length+' · '+suffix;
+  }
+
+  // Shiny toggle
+  var shinyBtn=document.getElementById('dr-shiny-btn');
+  if(shinyBtn){
+    shinyBtn.addEventListener('click',function(){
+      var img=drawerContent.querySelector('.dr-img');
+      var fi=parseInt(img.dataset.fi);
+      var f=forms[fi];
+      var ns=img.dataset.shiny==='1'?0:1;
+      img.dataset.shiny=ns;
+      img.src=ns?PIXEL_CDN+'/shiny/'+f.id+'.png':PIXEL_CDN+'/'+f.id+'.png';
+      shinyBtn.classList.toggle('active',!!ns);
+    });
+  }
+
+  // Favorite toggle
+  var favBtn=document.getElementById('dr-fav-btn');
+  if(favBtn){
+    favBtn.addEventListener('click',function(){
+      var nowFav=toggleFav(p.id);
+      favBtn.innerHTML=nowFav?'<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>':'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+      favBtn.classList.toggle('active',nowFav);
+      var card=document.querySelector('.card[data-id="'+p.id+'"]');
+      if(card){
+        var ind=card.querySelector('.card-fav-indicator');
+        if(nowFav&&!ind){
+          var w=card.querySelector('.card-img-wrap');
+          if(w){var ni=document.createElement('img');ni.className='card-fav-indicator';ni.src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Ccircle cx="12" cy="12" r="10" fill="%23fff" stroke="%23333" stroke-width="1.5"/%3E%3Cpath d="M2 12a10 10 0 0 1 20 0" fill="%23cc0000"/%3E%3Cpath d="M2 12h20" stroke="%23333" stroke-width="1.5" fill="none"/%3E%3Ccircle cx="12" cy="12" r="3" fill="%23fff" stroke="%23333" stroke-width="1.5"/%3E%3C/svg%3E';ni.alt='';w.appendChild(ni);}
+        }else if(!nowFav&&ind){ind.remove();}
+      }
+    });
+  }
+
+  // Form swipe
+  var iw=drawerContent.querySelector('.dr-img-wrap');
+  var sx=0;
+  iw.addEventListener('touchstart',function(e){sx=e.changedTouches[0].clientX;},{passive:true});
+  iw.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)<40) return;
+    var img=drawerContent.querySelector('.dr-img');
+    var fi=parseInt(img.dataset.fi);
+    var wasShiny=img.dataset.shiny==='1';
+    if(dx<0&&fi<forms.length-1) fi++;
+    else if(dx>0&&fi>0) fi--;
+    else return;
+    img.dataset.fi=fi;
+    var f=forms[fi];
+    // Update sprite immediately
+    img.src=wasShiny?PIXEL_CDN+'/shiny/'+f.id+'.png':PIXEL_CDN+'/'+f.id+'.png';
+    // Fetch form data and reload drawer info
+    (async function(){
+      try{
+        var fd=await fetchOne(f.id);
+        var fs=await fetchSpecies(f.id).catch(function(){return null;});
+        p.types=fd.types||[];p.stats=fd.stats||[];
+        p.abilities=fd.abilities||[];p.moves=fd.moves||[];
+        p.height=fd.height;p.weight=fd.weight;
+        p.cry=fd.cries?.latest||'';
+        if(fs){
+          p.nameCN=fs.names?.find(function(n){return n.language.name==='zh-hans'||n.language.name==='zh-Hant';})?.name||f.name;
+          p.flavorText=fs.flavor_text_entries?.find(function(n){return n.language.name==='zh-hans'||n.language.name==='zh-Hant';})?.flavor_text?.replace(/[\n\f]/g,' ')||'';
+          if(fs.evolution_chain?.url){try{p.evolution=await fetchEvolution(fs.evolution_chain.url);}catch(ex){}}
+          if(fs.varieties&&fs.varieties.length>0){
+            p.forms=fs.varieties.map(function(v){return{id:idFromUrl(v.pokemon.url),name:v.pokemon.name,isDefault:v.is_default};});
+          }
+        }
+        // Find correct form index in possibly-updated forms array
+        var nfi=0;
+        if(p.forms){for(var zi=0;zi<p.forms.length;zi++){if(p.forms[zi].id===f.id){nfi=zi;break;}}}
+        p._formIdx=nfi;
+        renderDrawer(p);
+        // Re-apply shiny state after re-render
+        if(wasShiny){
+          var ni=drawerContent.querySelector('.dr-img');
+          if(!ni) return;
+          var nfi2=parseInt(ni.dataset.fi);
+          var nf=p.forms[nfi2]||p.forms[0];
+          ni.dataset.shiny=1;
+          ni.src=PIXEL_CDN+'/shiny/'+nf.id+'.png';
+          var nsb=document.getElementById('dr-shiny-btn');
+          if(nsb) nsb.classList.add('active');
+        }
+      }catch(ex){}
+    })();
+  },{passive:true});
+
+  // Stats toggle bars ↔ radar  —  click the area to switch
+  var statsArea=document.getElementById('dr-stats-area');
+  if(statsArea){
+    var showRadar=false;
+    statsArea.addEventListener('click',function(){
+      showRadar=!showRadar;
+      var bars=document.getElementById('dr-stats-bars');
+      var radar=document.getElementById('dr-stats-radar');
+      if(!bars||!radar) return;
+      bars.style.display=showRadar?'none':'';
+      radar.style.display=showRadar?'':'none';
+      var lbl=document.getElementById('dr-stats-label');
+      if(lbl) lbl.textContent=showRadar?'雷达图':'条形图';
+      // Fade animation on the newly visible element
+      var el=showRadar?radar:bars;
+      el.classList.remove('dr-stats-fade');
+      void el.offsetWidth;
+      el.classList.add('dr-stats-fade');
+    });
+  }
+
+  // Type effectiveness (async)
+  (async function(){
+    var types=p.types.map(function(t){return t.type.name;});
+    if(!types.length){var g=document.getElementById('dr-eff-grid');if(g)g.textContent='暂无数据';return;}
+    var typeData={};
+    for(var i=0;i<types.length;i++){
+      var td=await fetchType(types[i]);
+      if(td) typeData[types[i]]=td;
+    }
+    if(Object.keys(typeData).length===0){var g=document.getElementById('dr-eff-grid');if(g)g.textContent='暂无数据';return;}
+    var mult={};GEN1_TYPES.forEach(function(t){mult[t]=1;});
+    types.forEach(function(tn){
+      var td=typeData[tn];if(!td) return;
+      td.double_from.forEach(function(t){mult[t]*=2;});
+      td.half_from.forEach(function(t){mult[t]*=0.5;});
+      td.no_from.forEach(function(t){mult[t]=0;});
+    });
+    var weak4=GEN1_TYPES.filter(function(t){return mult[t]>=4;});
+    var weak2=GEN1_TYPES.filter(function(t){return mult[t]===2;});
+    var resist=GEN1_TYPES.filter(function(t){return mult[t]===0.5;});
+    var quadResist=GEN1_TYPES.filter(function(t){return mult[t]===0.25;});
+    var immune=GEN1_TYPES.filter(function(t){return mult[t]===0;});
+    var html='';
+    if(weak4.length) html+='<div class="dr-eff-row"><span class="dr-eff-label">4×</span>'+weak4.map(function(t){return '<span class="dr-eff-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</span>';}).join('')+'</div>';
+    if(weak2.length) html+='<div class="dr-eff-row"><span class="dr-eff-label">2×</span>'+weak2.map(function(t){return '<span class="dr-eff-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</span>';}).join('')+'</div>';
+    if(resist.length) html+='<div class="dr-eff-row"><span class="dr-eff-label">½×</span>'+resist.map(function(t){return '<span class="dr-eff-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</span>';}).join('')+'</div>';
+    if(quadResist.length) html+='<div class="dr-eff-row"><span class="dr-eff-label">¼×</span>'+quadResist.map(function(t){return '<span class="dr-eff-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</span>';}).join('')+'</div>';
+    if(immune.length) html+='<div class="dr-eff-row"><span class="dr-eff-label">0×</span>'+immune.map(function(t){return '<span class="dr-eff-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</span>';}).join('')+'</div>';
+    if(!html) html='<span style="font-size:12px;color:var(--text-muted)">无</span>';
+    var grid=document.getElementById('dr-eff-grid');if(grid)grid.innerHTML=html;
+  })();
+}
+
+
+function renderTeam(){
+  var panel=$('#team-panel');
+  var grid=$('#team-grid');
+  if(!panel||!grid)return;
+  var team=myTeams[activeTeam];
+  var slots='';
+  for(var i=0;i<MAX_TEAM;i++){
+    var p=team[i];
+    if(!p){slots+='<div class="team-slot" data-empty-idx="'+i+'"><span class="slot-empty">+</span></div>';continue;}
+    var cn=p.nameCN||p.name;
+    slots+='<div class="team-slot filled" data-team-idx="'+i+'"><button class="slot-remove" data-rm-idx="'+i+'">&times;</button><img src="'+PIXEL_CDN+'/'+p.id+'.png" class="slot-img"><span class="slot-name">'+cn+'</span></div>';
+  }
+  grid.innerHTML=slots;
+  grid.querySelectorAll('.slot-remove').forEach(function(el){
+    el.addEventListener('click',function(e){
+      e.stopPropagation();
+      var idx=parseInt(this.dataset.rmIdx);
+      team.splice(idx,1);saveTeams();renderTeam();showTeamRatingBtn();
+    });
+  });
+  grid.querySelectorAll('.team-slot.filled').forEach(function(el){
+    el.addEventListener('click',function(){
+      var idx=parseInt(this.dataset.teamIdx);
+      if(team[idx]) openDrawer(team[idx].id);
+    });
+  });
+  grid.querySelectorAll('.team-slot:not(.filled)').forEach(function(el){
+    el.addEventListener('click',function(){showTeamAddFlow(parseInt(this.dataset.emptyIdx));});
+  });
+}
+function switchTeam(idx){
+  activeTeam=idx;
+  renderTeam();
+  showTeamRatingBtn();
+  $('#subtitle').textContent='我的队伍 — 队伍'+(activeTeam+1)+' ('+getTeam().length+'/'+MAX_TEAM+')';
+  var tabs=$('#team-panel').querySelector('.team-tabs');
+  if(tabs) tabs.querySelectorAll('.team-tab').forEach(function(t){t.classList.toggle('active',parseInt(t.dataset.tabIdx)===activeTeam);});
+}
+function showTeamRatingBtn(){
+  var el=document.getElementById('team-rating');
+  if(!el) return;
+  var empty=myTeams.every(function(t){return t.length===0;});
+  if(empty){el.innerHTML='';return;}
+  el.innerHTML='<button class="team-rating-btn" id="team-rate-btn">队伍分析</button>';
+  var btn=document.getElementById('team-rate-btn');
+  btn.addEventListener('click',function(){
+    // Show team picker first
+    var picker=document.createElement('div');
+    picker.className='team-analysis-overlay';
+    var ph='<div class="team-analysis-modal" style="padding:20px;max-width:280px"><div style="font-size:15px;font-weight:800;color:var(--text-primary);text-align:center;margin-bottom:12px">选择要分析的队伍</div>';
+    for(var ti=0;ti<3;ti++){
+      var tc=myTeams[ti].length;
+      ph+='<button class="team-pick-btn" data-idx="'+ti+'"><span style="font-size:14px;font-weight:700">队伍'+(ti+1)+'</span> <span style="font-size:12px;color:var(--text-muted)">'+tc+'/6</span></button>';
+    }
+    ph+='</div>';
+    picker.innerHTML=ph;
+    document.body.appendChild(picker);
+    picker.querySelectorAll('.team-pick-btn').forEach(function(b){
+      b.addEventListener('click',function(){
+        var idx=parseInt(this.dataset.idx);
+        if(myTeams[idx].length===0){
+          picker.innerHTML='<div class="team-analysis-modal" style="padding:30px;max-width:280px;text-align:center"><div style="font-size:36px;margin-bottom:10px;color:var(--text-muted)">!</div><div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:6px">该队伍还没有宝可梦</div><div style="font-size:12px;color:var(--text-muted)">请先添加宝可梦再分析</div></div>';
+          setTimeout(function(){picker.remove();},1200);
+          return;
+        }
+        picker.remove();renderTeamRating(idx);
+      });
+    });
+    picker.addEventListener('click',function(e){if(e.target===picker) picker.remove();});
+  });
+}
+function showTeamAddFlow(slotIdx){
+  var ov=document.createElement('div');
+  ov.className='team-analysis-overlay';
+  var th='<div class="team-analysis-modal team-add-modal"><div class="team-add-title">选择属性</div><div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-align:center">选择你想添加的宝可梦属性（最多选 2 个）</div><div class="team-add-type-grid">';
+  GEN1_TYPES.forEach(function(t){th+='<button class="team-add-type-btn" data-type="'+t+'" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</button>';});
+  th+='</div><button class="team-add-confirm" disabled>确认</button></div>';
+  ov.innerHTML=th;
+  document.body.appendChild(ov);
+  var selTypes=[];
+  ov.querySelectorAll('.team-add-type-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var t=this.dataset.type;var i=selTypes.indexOf(t);
+      if(i!==-1){selTypes.splice(i,1);this.classList.remove('selected');}
+      else if(selTypes.length<2){selTypes.push(t);this.classList.add('selected');}
+      ov.querySelector('.team-add-confirm').disabled=selTypes.length===0;
+    });
+  });
+  ov.querySelector('.team-add-confirm').addEventListener('click',function(){
+    var matches=pokemonList.filter(function(p){
+      if(!p.types||!p.types.length) return false;
+      var pts=p.types.map(function(x){return x.type.name;});
+      return selTypes.some(function(st){return pts.indexOf(st)!==-1;});
+    }).slice(0,200);
+    var mh='<div class="team-analysis-modal team-add-modal"><div class="team-add-title">选择宝可梦</div><div class="team-add-pokemon-grid">';
+    matches.forEach(function(p){mh+='<button class="team-add-pokemon-item" data-id="'+p.id+'"><img src="'+PIXEL_CDN+'/'+p.id+'.png" class="slot-img"><span class="team-add-pokemon-name">'+(p.nameCN||p.name)+'</span></button>';});
+    mh+='</div></div>';
+    ov.innerHTML=mh;
+    ov.querySelectorAll('.team-add-pokemon-item').forEach(function(item){
+      item.addEventListener('click',function(){
+        var id=parseInt(this.dataset.id);
+        var p=pokemonList.find(function(x){return x.id===id;});
+        if(!p) return;
+        myTeams[activeTeam].splice(slotIdx,0,{id:p.id,name:p.name,nameCN:p.nameCN||p.name});
+        if(myTeams[activeTeam].length>MAX_TEAM) myTeams[activeTeam].length=MAX_TEAM;
+        saveTeams();ov.remove();renderTeam();showTeamRatingBtn();
+      });
+    });
+  });
+  ov.addEventListener('click',function(e){if(e.target===ov) ov.remove();});
+}
+async function renderTeamRating(teamIdx){
+  if(teamIdx===undefined) teamIdx=activeTeam;
+  var team=myTeams[teamIdx];
+  var el=document.getElementById('team-rating');
+  if(!el) return;
+  if(team.length===0){el.innerHTML='';return;}
+  el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px">分析队伍中…</div>';
+  var members=team.map(function(m){
+    var p=pokemonList.find(function(x){return x.id===m.id;});
+    return p?p.types.map(function(t){return t.type.name;}):[];
+  }).filter(function(t){return t.length>0;});
+  if(members.length===0){el.innerHTML='';return;}
+  // Fetch type data (force-refresh if offensive fields missing)
+  var typeData={};
+  for(var i=0;i<members.length;i++){
+    for(var j=0;j<members[i].length;j++){
+      var tn=members[i][j];
+      if(!typeData[tn]) typeData[tn]=await fetchType(tn);
+      // Ensure we have offensive data
+      if(typeData[tn]&&!typeData[tn].double_to) typeData[tn]=await fetchType(tn,true);
+    }
+  }
+  // ── DEFENSE ANALYSIS ──
+  var defMult={},quadWeak=[];
+  GEN1_TYPES.forEach(function(atk){
+    var best=Infinity;
+    members.forEach(function(defTypes){
+      var m=1;
+      defTypes.forEach(function(dt){
+        var td=typeData[dt];if(!td)return;
+        if(td.double_from.indexOf(atk)!==-1) m*=2;
+        if(td.half_from.indexOf(atk)!==-1) m*=0.5;
+        if(td.no_from.indexOf(atk)!==-1) m=0;
+      });
+      if(m<best) best=m;
+      if(m>=4&&quadWeak.indexOf(atk)===-1) quadWeak.push(atk);
+    });
+    defMult[atk]=best;
+  });
+  var defBlind=GEN1_TYPES.filter(function(t){return defMult[t]>=1;});
+  var immune=GEN1_TYPES.filter(function(t){return defMult[t]===0;});
+  // ── OFFENSE ANALYSIS ──
+  var offCover={};
+  GEN1_TYPES.forEach(function(t){offCover[t]=false;});
+  var offCandidates=[]; // unique attacking types from team members
+  members.forEach(function(defTypes){
+    defTypes.forEach(function(t){
+      if(offCandidates.indexOf(t)===-1) offCandidates.push(t);
+    });
+  });
+  offCandidates.forEach(function(t){
+    var td=typeData[t];
+    if(td) td.double_to.forEach(function(dt){offCover[dt]=true;});
+  });
+  var offBlind=GEN1_TYPES.filter(function(t){return !offCover[t];});
+  var ob=offBlind.length;
+  // ── COMPREHENSIVE GRADE (percentage-based) ──
+  var db=defBlind.length;
+  var defResist=GEN1_TYPES.filter(function(t){return defMult[t]<=0.5;}).length;
+  var defScore=Math.round(defResist/18*100);
+  var offScore=Math.round((18-ob)/18*100);
+  var totalScore=Math.round(defScore*0.6+offScore*0.4);
+  var overall,overallClass;
+  if(totalScore>=85&&immune.length>0){overall='S';overallClass='S';}
+  else if(totalScore>=85){overall='S-';overallClass='S';}
+  else if(totalScore>=70){overall='A';overallClass='A';}
+  else if(totalScore>=55){overall='B';overallClass='B';}
+  else if(totalScore>=40){overall='C';overallClass='C';}
+  else{overall='D';overallClass='D';}
+  var title=overallClass==='S'||overall==='A'?'宝可梦大师':overallClass==='B'||overall==='C'?'勉强能战':'菜鸟队伍';
+  // ── RENDER ──
+  var html='<div class="team-rating-title">队伍评分</div><div class="team-rating-head">';
+  html+='<div class="team-rating-grade '+overallClass+'">'+overall+'</div><div class="team-rating-summary">';
+  html+='<div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:2px">'+title+'</div>';
+  html+='防御 <strong>'+defScore+'%</strong> | 进攻 <strong>'+offScore+'%</strong> | 盲点 <strong>'+db+'</strong>';
+  html+='</div></div>';
+  html+='<button class="team-analysis-close-btn">调整队伍</button>';
+  // ── DEFENSE SECTION ──
+  html+='<div class="team-rating-section-title" style="margin-top:4px">🛡️ 防御分析</div>';
+  if(db){
+    html+='<div class="team-rating-section-title" style="font-size:10px;color:#cc0000;margin-bottom:6px">防御盲点：无宝可梦抵抗以下属性</div><div class="team-rating-blindspots">';
+    defBlind.sort(function(a,b){return TYPE_CN[a].localeCompare(TYPE_CN[b]);}).forEach(function(t){
+      html+='<span class="team-rating-blindspot-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+(defMult[t]>=2?' ×'+defMult[t]:'')+'</span>';
+    });
+    html+='</div>';
+  }else{
+    html+='<div style="font-size:12px;color:#00a050;margin-bottom:8px;font-weight:600">✓ 无防御盲点'+(immune.length?'（'+immune.length+' 个免疫）':'')+'</div>';
+  }
+  if(quadWeak.length) html+='<div style="font-size:11px;color:#cc0000;margin-bottom:8px">⚠️ 存在 4 倍弱点：'+quadWeak.map(function(t){return TYPE_CN[t];}).join('、')+'</div>';
+  html+='<div class="team-rating-detail" style="margin-bottom:8px">';
+  GEN1_TYPES.forEach(function(t){
+    var m=defMult[t];var cls='trdi-neutral';var icon='—';
+    if(m===0){cls='trdi-immune';icon='○';}
+    else if(m<=0.25){cls='trdi-resist';icon='▽';}
+    else if(m<=0.5){cls='trdi-resist';icon='▼';}
+    else if(m===1){cls='trdi-neutral';icon='—';}
+    else if(m>=4){cls='trdi-weak';icon='✕';}
+    else{cls='trdi-weak';icon='▲';}
+    html+='<div class="team-rating-detail-item '+cls+'"><span class="trdi-icon">'+icon+'</span>'+TYPE_CN[t]+'</div>';
+  });
+  html+='</div>';
+  // ── OFFENSE SECTION ──
+  html+='<div class="team-rating-section-title">⚔️ 进攻分析</div>';
+  if(ob){
+    html+='<div class="team-rating-section-title" style="font-size:10px;color:#cc0000;margin-bottom:6px">进攻盲点：无宝可梦可克制以下属性</div><div class="team-rating-blindspots">';
+    offBlind.sort(function(a,b){return TYPE_CN[a].localeCompare(TYPE_CN[b]);}).forEach(function(t){
+      html+='<span class="team-rating-blindspot-badge" style="background:'+TYPE_COLORS[t]+'">'+TYPE_CN[t]+'</span>';
+    });
+    html+='</div>';
+  }else{
+    html+='<div style="font-size:12px;color:#00a050;margin-bottom:8px;font-weight:600">✓ 无进攻盲点，可克制所有属性</div>';
+  }
+  html+='<div class="team-rating-detail">';
+  GEN1_TYPES.forEach(function(t){
+    var covered=offCover[t];
+    var cls=covered?'trdi-resist':'trdi-weak';
+    var icon=covered?'✓':'✕';
+    html+='<div class="team-rating-detail-item '+cls+'"><span class="trdi-icon">'+icon+'</span>'+TYPE_CN[t]+'</div>';
+  });
+  html+='</div>';
+  // Show results in a modal
+  var ov=document.createElement('div');
+  ov.className='team-analysis-overlay';
+  ov.innerHTML='<div class="team-analysis-modal">'+html+'</div>';
+  document.body.appendChild(ov);
+  var closeModal=function(){ov.remove();showTeamRatingBtn();};
+  ov.querySelector('.team-analysis-close-btn').addEventListener('click',closeModal);
+  ov.addEventListener('click',function(e){if(e.target===ov) closeModal();});
+}
+function closeDrawer(){
+  drawer.classList.remove('open');overlay.classList.remove('active');
+  document.body.style.overflow='';
+}
+function showReplaceModal(team, cb){
+  var ov=document.createElement('div');
+  ov.className='team-replace-overlay';
+  var html='<div class="team-replace-modal"><div class="team-replace-title">选择要替换的宝可梦</div><div class="team-replace-grid">';
+  team.forEach(function(m,idx){
+    var cn=m.nameCN||m.name;
+    html+='<div class="team-replace-item" data-idx="'+idx+'"><img src="'+PIXEL_CDN+'/'+m.id+'.png"><span>'+cn+'</span></div>';
+  });
+  html+='</div></div>';
+  ov.innerHTML=html;
+  ov.addEventListener('click',function(e){
+    var item=e.target.closest('.team-replace-item');
+    if(item){cb(parseInt(item.dataset.idx));ov.remove();}
+    else if(e.target===ov) ov.remove();
+  });
+  drawerContent.appendChild(ov);
+}
+
+/* ─── SIDEBAR ─── */
+const sidebar=$('#sidebar');
+function openSidebar(){
+  sidebar.classList.add('open');overlay.classList.add('active');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
+  sidebar.classList.remove('open');
+  if(!drawer.classList.contains('open')){
+    overlay.classList.remove('active');
+    document.body.style.overflow='';
+  }
+}
+$('#btn-hamburger').addEventListener('click',openSidebar);
+$('#sidebar-close').addEventListener('click',closeSidebar);
+// sidebar items
+document.querySelectorAll('.sidebar-item[data-sidebar]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    selectedGen=null;
+    document.querySelectorAll('.sidebar-item.sub').forEach(x=>x.classList.remove('active'));
+    var sidebarType=el.dataset.sidebar;
+    if(sidebarType==='favorites'){
+      showFavOnly=true;
+      $('#subtitle').textContent='我的收藏 ('+favorites.length+' 只)';
+    }else{
+      showFavOnly=false;
+      if(sidebarType==='kanto') $('#subtitle').textContent='全部宝可梦 — '+pokemonList.length+' 种';
+    }
+    applyFilters();
+    closeSidebar();
+  });
+});
+document.getElementById('sidebar-gen-hdr').addEventListener('click',function(){
+  document.getElementById('sidebar-sub').classList.toggle('hidden');
+  document.getElementById('sg-arrow').classList.toggle('open');
+});
+document.querySelectorAll('.sidebar-item.sub').forEach(el=>{
+  el.addEventListener('click',function(e){
+    e.stopPropagation();
+    document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item.sub').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    showFavOnly=false;
+    selectedGen=parseInt(this.dataset.gen);
+    $('#subtitle').textContent='Gen'+selectedGen+' — 第'+selectedGen+'世代';
+    applyFilters();
+    closeSidebar();
+  });
+});
+
+// overlay hides both sidebar and drawer
+overlay.addEventListener('click',()=>{closeSidebar();closeDrawer();});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  if(sidebar.classList.contains('open')) closeSidebar();
+  if(drawer.classList.contains('open')) closeDrawer();
+});
+
+/* ─── GUESS GAME ─── */
+function showGuessGame(){
+  hideAllViews();
+  var game=document.getElementById('guess-game');
+  if(!game){
+    game=document.createElement('div');game.id='guess-game';game.className='guess-wrap';
+    $('#main').appendChild(game);
+  }
+  game.style.display='block';
+  navViews.guess=game;
+  $('#subtitle').textContent='猜猜我是谁';
+  guessScore=0;guessTotal=0;guessStreak=0;guessActive=false;
+  if(guessTimer){clearInterval(guessTimer);guessTimer=null;}
+  if(window._timedTimeouts){window._timedTimeouts.forEach(function(t){clearTimeout(t);});window._timedTimeouts=null;}
+  guessTimeLeft=60;guessMode='';
+  // Show mode selection screen
+  game.innerHTML=
+    '<div class="guess-mode-picker">'+
+      '<div class="guess-picker-title">选择游戏模式</div>'+
+      '<button class="guess-mode-card" data-mode="novice">'+
+        '<div class="guess-mode-card-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'+
+        '<div class="guess-mode-card-name">新手模式</div>'+
+        '<div class="guess-mode-card-desc">根据剪影猜出宝可梦，熟悉基本玩法</div>'+
+      '</button>'+
+      '<button class="guess-mode-card" data-mode="master">'+
+        '<div class="guess-mode-card-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg></div>'+
+        '<div class="guess-mode-card-name">进阶模式</div>'+
+        '<div class="guess-mode-card-desc">根据文字线索推理出宝可梦</div>'+
+      '</button>'+
+      '<button class="guess-mode-card" data-mode="timed">'+
+        '<div class="guess-mode-card-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>'+
+        '<div class="guess-mode-card-name">限时模式</div>'+
+        '<div class="guess-mode-card-desc">60秒内尽可能答对更多题目</div>'+
+      '</button>'+
+    '</div>';
+  game.querySelectorAll('.guess-mode-card').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var mode=this.dataset.mode;
+      guessScore=0;guessTotal=0;guessStreak=0;guessMode=mode;guessActive=true;
+      if(mode==='novice') startGuessRound();
+      else if(mode==='master') startMasterRound();
+      else if(mode==='timed'){guessTimeLeft=60;startTimedRound();}
+    });
+  });
+}
+function fadeOutOverlay(overlay, cb){
+  overlay.classList.add('fade-out');
+  setTimeout(function(){overlay.remove();if(cb)cb();},200);
+}
+function showGuessBackConfirm(){
+  var game=document.getElementById('guess-game');
+  if(!game) return;
+  var overlay=document.createElement('div');
+  overlay.className='guess-exit-overlay';
+  overlay.innerHTML='<div class="guess-exit-card"><div class="guess-exit-title">确认退出？</div><div class="guess-exit-btns" style="margin-top:16px"><button class="guess-exit-btn stay">继续玩</button><button class="guess-exit-btn leave">确认退出</button></div></div>';
+  game.appendChild(overlay);
+  overlay.querySelector('.guess-exit-btn.stay').addEventListener('click',function(){fadeOutOverlay(overlay);});
+  overlay.querySelector('.guess-exit-btn.leave').addEventListener('click',function(){
+    fadeOutOverlay(overlay,function(){
+      guessActive=false;
+      if(guessTimer){clearInterval(guessTimer);guessTimer=null;}
+      if(window._timedTimeouts){window._timedTimeouts.forEach(function(t){clearTimeout(t);});window._timedTimeouts=null;}
+      showGuessGame();
+    });
+  });
+}
+function startGuessRound(){
+  var candidates=pokemonList.filter(function(p){return p.types&&p.types.length>0&&p.id<=1025;});
+  if(candidates.length<4) return;
+  var answer=candidates[Math.floor(Math.random()*candidates.length)];
+  guessAnswerId=answer.id;guessLocked=false;
+  var wrongs=candidates.filter(function(p){return p.id!==answer.id;});
+  shuffleArray(wrongs);
+  var options=[answer].concat(wrongs.slice(0,3));
+  shuffleArray(options);
+  var game=document.getElementById('guess-game');
+  if(!game) return;
+  game.innerHTML=
+    '<button class="guess-back-btn">返回</button>'+
+    '<div class="guess-mode-label">新手模式</div>'+
+    '<div class="guess-score">得分: 0</div><div class="guess-streak" id="guess-streak"></div><div class="guess-sil-wrap"><img class="guess-sil" id="guess-sil" src="'+PIXEL_CDN+'/'+answer.id+'.png"></div><div class="guess-opt">'+options.map(function(o){return '<button data-id="'+o.id+'">'+(o.nameCN||o.name)+'</button>';}).join('')+'</div>';
+  game.querySelectorAll('.guess-opt button').forEach(function(btn){
+    btn.addEventListener('click',function(){handleGuess(this,answer.id);});
+  });
+  game.querySelector('.guess-back-btn').addEventListener('click',showGuessBackConfirm);
+}
+function handleGuess(btn,correctId){
+  if(guessLocked) return;
+  guessLocked=true;guessTotal++;
+  var selectedId=parseInt(btn.dataset.id);
+  var isCorrect=selectedId===correctId;
+  if(isCorrect){guessScore++;guessStreak++;}else{guessStreak=0;}
+  // In master mode, show hidden silhouette before revealing
+  if(guessMode==='master'){var sw2=document.getElementById('guess-sil');if(sw2){var wp=sw2.parentElement;if(wp)wp.style.display='';void sw2.offsetWidth;}}
+  // Reveal silhouette
+  var sil=document.getElementById('guess-sil');
+  if(sil){sil.classList.add('reveal');}
+  // Play cry
+  var p=pokemonList.find(function(x){return x.id===correctId;});
+  if(p&&p.cry){try{new Audio(p.cry).play();}catch(e){}}
+  // Mark options
+  document.querySelectorAll('.guess-opt button').forEach(function(b){
+    b.disabled=true;
+    var id=parseInt(b.dataset.id);
+    if(id===correctId) b.className='correct';
+    else if(id===selectedId&&!isCorrect) b.className='wrong';
+  });
+  // Update score
+  var sg=document.getElementById('guess-game');
+  if(sg){
+    sg.querySelector('.guess-score').textContent='得分: '+guessScore;
+    var st=sg.querySelector('#guess-streak');
+    if(st) st.textContent=guessStreak>0?'连击 '+guessStreak:'';
+  }
+  // Next button or auto-advance for timed mode
+  if(guessMode==='timed'&&guessTimeLeft>0){
+    var ta=setTimeout(function(){if(guessActive)startTimedRound();},800);
+    if(!window._timedTimeouts) window._timedTimeouts=[];
+    window._timedTimeouts.push(ta);
+  }else if(guessMode!=='timed'){
+    var nb=document.createElement('button');
+    nb.textContent='下一题';nb.className='guess-next-btn';
+    nb.addEventListener('click',function(){if(guessMode==='master')startMasterRound();else startGuessRound();});
+    sg.appendChild(nb);
+  }
+}
+async function startMasterRound(){
+  var candidates=pokemonList.filter(function(p){return p.types&&p.types.length>0&&p.id<=1025;});
+  if(candidates.length<6) return;
+  var answer=candidates[Math.floor(Math.random()*candidates.length)];
+  guessAnswerId=answer.id;guessLocked=false;
+  var game=document.getElementById('guess-game');
+  if(!game) return;
+  // Show loading while fetching clue data
+  game.innerHTML=
+    '<button class="guess-back-btn">返回</button>'+
+    '<div class="guess-mode-label">进阶模式</div>'+
+    '<div class="guess-score">得分: 0</div><div class="guess-streak" id="guess-streak"></div>'+
+    '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">生成题目中...</div>';
+  var clue=await generateClue(answer);
+  var wrongs=candidates.filter(function(p){return p.id!==answer.id;});
+  shuffleArray(wrongs);
+  var options=[answer].concat(wrongs.slice(0,5));
+  shuffleArray(options);
+  game.innerHTML=
+    '<button class="guess-back-btn">返回</button>'+
+    '<div class="guess-mode-label">进阶模式</div>'+
+    '<div class="guess-score">得分: 0</div><div class="guess-streak" id="guess-streak"></div>'+
+    '<div class="guess-clue-wrap"><div class="guess-clue-ball"></div><div class="guess-clue-label">请根据以下线索猜出这只宝可梦</div><div class="guess-clue-text">'+clue+'</div></div>'+
+    '<div class="guess-sil-wrap" style="display:none"><img class="guess-sil" id="guess-sil" src="'+PIXEL_CDN+'/'+answer.id+'.png"></div>'+
+    '<div class="guess-opt">'+options.map(function(o){return '<button data-id="'+o.id+'">'+(o.nameCN||o.name)+'</button>';}).join('')+'</div>';
+  game.querySelectorAll('.guess-opt button').forEach(function(btn){
+    btn.addEventListener('click',function(){handleGuess(this,answer.id);});
+  });
+  game.querySelector('.guess-back-btn').addEventListener('click',showGuessBackConfirm);
+}
+async function generateClue(p){
+  var pool=[];
+  if(p.types&&p.types.length){
+    var tns=p.types.map(function(t){return TYPE_CN[t.type.name]||t.type.name;});
+    pool.push(tns.length===1?'这只宝可梦的属性是 '+tns[0]+' 属性':'这只宝可梦拥有 '+tns.join(' 和 ')+' 两种属性');
+  }
+  if(p.abilities&&p.abilities.length){
+    var ab=p.abilities[0];
+    var abData=await fetchAbility(idFromUrl(ab.ability.url));
+    pool.push('它的特性之一是「'+(abData?abData.nameCN:ab.ability.name)+'」');
+  }
+  if(p.moves&&p.moves.length){
+    var idx=Math.floor(Math.random()*Math.min(p.moves.length,10));
+    var move=p.moves[idx];
+    var mvData=await fetchMove(idFromUrl(move.move.url));
+    pool.push('它可以学会「'+(mvData?mvData.nameCN:move.move.name)+'」');
+  }
+  if(p.habitat){
+    var hc={'grassland':'草原','forest':'森林','waters-edge':'水边','sea':'海洋','cave':'洞穴','mountain':'山区','rough-terrain':'崎岖地带','urban':'城市','rare':'稀少之处'};
+    pool.push('它生活在'+(hc[p.habitat]||p.habitat));
+  }
+  for(var g=0;g<GEN_RANGES.length;g++){
+    if(p.id>=GEN_RANGES[g][0]&&p.id<=GEN_RANGES[g][1]){
+      var gn=['','一','二','三','四','五','六','七','八','九'];
+      pool.push('它属于第 '+gn[g+1]+' 世代');
+      break;
+    }
+  }
+  shuffleArray(pool);
+  var cnt=Math.min(3,pool.length);
+  return pool.slice(0,cnt).join('<br>');
+}
+function startTimedRound(){
+  var candidates=pokemonList.filter(function(p){return p.types&&p.types.length>0&&p.id<=1025;});
+  if(candidates.length<4) return;
+  var answer=candidates[Math.floor(Math.random()*candidates.length)];
+  guessAnswerId=answer.id;guessLocked=false;
+  var wrongs=candidates.filter(function(p){return p.id!==answer.id;});
+  shuffleArray(wrongs);
+  var options=[answer].concat(wrongs.slice(0,3));
+  shuffleArray(options);
+  var game=document.getElementById('guess-game');
+  if(!game) return;
+  // Init timer on first call
+  if(guessTimer===null&&guessTimeLeft>0){
+    guessTimer=setInterval(function(){
+      guessTimeLeft--;
+      var el=document.getElementById('guess-timer');
+      if(el){el.textContent=guessTimeLeft+'s';el.style.color=guessTimeLeft<=10?'#cc0000':'';}
+      if(guessTimeLeft<=0){
+        clearInterval(guessTimer);guessTimer=null;
+        if(window._timedTimeouts){window._timedTimeouts.forEach(function(t){clearTimeout(t);});window._timedTimeouts=null;}
+        endTimedGame();
+      }
+    },1000);
+  }
+  var existingScore=game.querySelector('.guess-score');
+  if(existingScore){
+    // Subsequent rounds: update only the question elements, keep timer/score static
+    existingScore.textContent='得分: '+guessScore;
+    var silWrap=game.querySelector('.guess-sil-wrap');
+    if(silWrap) silWrap.innerHTML='<img class="guess-sil" id="guess-sil" src="'+PIXEL_CDN+'/'+answer.id+'.png">';
+    var optDiv=game.querySelector('.guess-opt');
+    if(optDiv){
+      optDiv.innerHTML=options.map(function(o){return '<button data-id="'+o.id+'">'+(o.nameCN||o.name)+'</button>';}).join('');
+      optDiv.querySelectorAll('button').forEach(function(btn){
+        btn.addEventListener('click',function(){handleGuess(this,answer.id);});
+      });
+    }
+  } else {
+    game.innerHTML=
+      '<button class="guess-back-btn">返回</button>'+
+      '<div class="guess-mode-label">限时模式</div>'+
+      '<div class="guess-timer" id="guess-timer">'+guessTimeLeft+'s</div>'+
+      '<div class="guess-score">得分: '+guessScore+'</div><div class="guess-streak" id="guess-streak"></div><div class="guess-sil-wrap"><img class="guess-sil" id="guess-sil" src="'+PIXEL_CDN+'/'+answer.id+'.png"></div><div class="guess-opt">'+options.map(function(o){return '<button data-id="'+o.id+'">'+(o.nameCN||o.name)+'</button>';}).join('')+'</div>';
+    game.querySelectorAll('.guess-opt button').forEach(function(btn){
+      btn.addEventListener('click',function(){handleGuess(this,answer.id);});
+    });
+    game.querySelector('.guess-back-btn').addEventListener('click',showGuessBackConfirm);
+  }
+}
+function endTimedGame(){
+  guessActive=false;
+  if(guessTimer){clearInterval(guessTimer);guessTimer=null;}
+  if(window._timedTimeouts){window._timedTimeouts.forEach(function(t){clearTimeout(t);});window._timedTimeouts=null;}
+  var game=document.getElementById('guess-game');
+  if(!game) return;
+  var ov=document.createElement('div');
+  ov.className='guess-exit-overlay';
+  ov.innerHTML='<div class="guess-exit-card"><div class="guess-exit-title">时间到！</div><div class="guess-exit-score">最终得分: '+guessScore+'/'+guessTotal+'</div><div class="guess-exit-btns" style="margin-top:16px"><button class="guess-exit-btn stay" id="timed-retry">再来一次</button><button class="guess-exit-btn leave" id="timed-back">返回</button></div></div>';
+  game.appendChild(ov);
+  ov.querySelector('#timed-retry').addEventListener('click',function(){
+    fadeOutOverlay(ov,function(){guessScore=0;guessTotal=0;guessStreak=0;guessTimeLeft=60;startTimedRound();});
+  });
+  ov.querySelector('#timed-back').addEventListener('click',function(){
+    fadeOutOverlay(ov,function(){guessScore=0;guessTotal=0;guessStreak=0;guessTimeLeft=60;
+    game.innerHTML=
+      '<div class="guess-mode-picker">'+
+        '<div class="guess-picker-title">选择游戏模式</div>'+
+        '<button class="guess-mode-card" data-mode="novice">'+
+          '<div class="guess-mode-card-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'+
+          '<div class="guess-mode-card-name">新手模式</div>'+
+          '<div class="guess-mode-card-desc">根据剪影猜出宝可梦，熟悉基本玩法</div>'+
+        '</button>'+
+        '<button class="guess-mode-card" data-mode="master">'+
+          '<div class="guess-mode-card-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg></div>'+
+          '<div class="guess-mode-card-name">进阶模式</div>'+
+          '<div class="guess-mode-card-desc">根据文字线索推理出宝可梦</div>'+
+        '</button>'+
+        '<button class="guess-mode-card" data-mode="timed">'+
+          '<div class="guess-mode-card-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>'+
+          '<div class="guess-mode-card-name">限时模式</div>'+
+          '<div class="guess-mode-card-desc">60秒内尽可能答对更多题目</div>'+
+        '</button>'+
+      '</div>';
+    game.querySelectorAll('.guess-mode-card').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        guessScore=0;guessTotal=0;guessStreak=0;guessTimeLeft=60;guessMode=this.dataset.mode;
+        if(this.dataset.mode==='novice') startGuessRound();
+        else if(this.dataset.mode==='master') startMasterRound();
+        else if(this.dataset.mode==='timed') startTimedRound();
+      });
+    });
+  });
+  });
+}
+  function showGuessExitCard(targetTab, targetNavItem){
+    var hsUpdated=false;
+    if(guessScore>guessHighScore){guessHighScore=guessScore;saveGuessHighScore();hsUpdated=true;}
+    var game=document.getElementById('guess-game');
+    if(!game) return;
+    var overlay=document.createElement('div');
+    overlay.className='guess-exit-overlay';
+    overlay.innerHTML='<div class="guess-exit-card"><div class="guess-exit-title">确认退出？</div><div class="guess-exit-score">本次得分: '+guessScore+'/'+guessTotal+'</div>'+(guessStreak>0?'<div class="guess-exit-streak">最高连击: '+guessStreak+'</div>':'')+'<div class="guess-exit-high">历史最高: '+guessHighScore+(hsUpdated?' <span style="color:#cc0000;font-size:11px">新纪录!</span>':'')+'</div><div class="guess-exit-btns"><button class="guess-exit-btn stay">继续玩</button><button class="guess-exit-btn leave">确认退出</button></div></div>';
+    game.appendChild(overlay);
+    overlay.querySelector('.guess-exit-btn.stay').addEventListener('click',function(){fadeOutOverlay(overlay);});
+    overlay.querySelector('.guess-exit-btn.leave').addEventListener('click',function(){fadeOutOverlay(overlay,function(){guessActive=false;if(guessTimer){clearInterval(guessTimer);guessTimer=null;}if(window._timedTimeouts){window._timedTimeouts.forEach(function(t){clearTimeout(t);});window._timedTimeouts=null;}document.querySelectorAll('.bottom-nav-item').forEach(function(x){x.classList.remove('active');});
+      if(targetNavItem) targetNavItem.classList.add('active');
+      if(targetTab==='favorites') showMainView();
+      else if(targetTab==='team') showTeamView();
+      else showPlaceholder(targetTab);
+    });
+    });
+  }
+
+  // Bottom nav
+  var navViews={};
+  function hideAllViews(){
+    $('#grid')&&$('#grid').classList.add('hidden');
+    $('#team-panel')&&$('#team-panel').classList.remove('show');
+    Object.keys(navViews).forEach(function(k){navViews[k].style.display='none';});
+  }
+  function showMainView(){
+    showFavOnly=false;
+    hideAllViews();
+    $('#grid')&&$('#grid').classList.remove('hidden');
+    $('#subtitle').textContent='全部宝可梦 — '+pokemonList.length+' 种';
+    document.querySelectorAll('.sidebar-item').forEach(function(x){x.classList.remove('active');});
+    var k=document.querySelector('.sidebar-item[data-sidebar="kanto"]');if(k)k.classList.add('active');
+  }
+  function showTeamView(){
+    hideAllViews();
+    $('#team-panel')&&$('#team-panel').classList.add('show');
+    var tp=$('#team-panel');
+    var existingTabs=tp.querySelector('.team-tabs');
+    if(!existingTabs){
+      var tabs=document.createElement('div');
+      tabs.className='team-tabs';
+      var tHtml='';
+      for(var ti=0;ti<3;ti++){tHtml+='<button class="team-tab'+(ti===activeTeam?' active':'')+'" data-tab-idx="'+ti+'">队伍'+(ti+1)+'</button>';}
+      tabs.innerHTML=tHtml;
+      tp.insertBefore(tabs,tp.firstChild);
+      tabs.addEventListener('click',function(e){var tab=e.target.closest('.team-tab');if(tab){var idx=parseInt(tab.dataset.tabIdx);switchTeam(idx);}});
+    }else{
+      existingTabs.querySelectorAll('.team-tab').forEach(function(t){t.classList.toggle('active',parseInt(t.dataset.tabIdx)===activeTeam);});
+    }
+    renderTeam();
+    showTeamRatingBtn();
+    $('#subtitle').textContent='我的队伍 — 队伍'+(activeTeam+1)+' ('+getTeam().length+'/'+MAX_TEAM+')';
+  }
+  function showPlaceholder(tab){
+    hideAllViews();
+    if(!navViews[tab]){
+      var d=document.createElement('div');
+      d.style.cssText='padding:60px 20px;text-align:center;color:var(--text-muted);font-size:14px;grid-column:1/-1';
+      d.textContent='功能开发中...';
+      $('#main').appendChild(d);
+      navViews[tab]=d;
+    }
+    navViews[tab].style.display='block';
+    var labels={guess:'猜猜我是谁',battle:'模拟对战'};
+    $('#subtitle').textContent=labels[tab]||'';
+  }
+  document.querySelectorAll('.bottom-nav-item').forEach(function(item){
+    item.addEventListener('click',function(){
+      var tab=this.dataset.tab;
+      if(tab==='guess'){
+        document.querySelectorAll('.bottom-nav-item').forEach(function(x){x.classList.remove('active');});
+        this.classList.add('active');
+        showGuessGame();
+        return;
+      }
+      if(guessActive){
+        showGuessExitCard(tab, this);
+        return;
+      }
+      document.querySelectorAll('.bottom-nav-item').forEach(function(x){x.classList.remove('active');});
+      this.classList.add('active');
+      if(tab==='favorites') showMainView();
+      else if(tab==='team') showTeamView();
+      else showPlaceholder(tab);
+    });
+  });
+  // Register SW for sprite caching
+  {;}
+  adjustMainPadding();
+  init();
+})();
+</script>
+
+
+</body>
 </html>
